@@ -2,6 +2,19 @@
 
 AZdecrypt is a fast and powerful hillclimbing classical cipher solver written in [FreeBASIC](https://www.freebasic.net/) by [Jarl](https://zodiackillerfacts.com/tag/jarl-van-eycke/) [Van](https://www.brusselstimes.com/150781/flemish-warehouse-worker-cracks-350-year-old-code) [Eycke](https://scienceblogs.de/klausis-krypto-kolumne/jarl-van-eycke-solves-400-year-old-longitude-message/).
 
+## ⚡ GPU (CUDA) port — this fork
+
+This fork adds a ground-up **CUDA** reimplementation of AZdecrypt's homophonic-substitution
+solver that runs thousands of simulated-annealing restarts in parallel on an NVIDIA GPU.
+It reads the same n-gram and cipher files as the original and is validated against it —
+it recovers the Zodiac-408 cipher with a score identical to a CPU reference solver.
+
+On an RTX 4070 Laptop it sustains roughly **5×** the throughput of an 8-thread CPU build
+with 6-grams (**~11×** with 5-grams). See [`gpu/`](gpu/) for the code, build instructions,
+and benchmarks.
+
+---
+
 Latest binaries can be found here:  
 - https://zodiackiller.net/community/zodiac-cipher-mailings-discussion/azdecrypt-1-19b/
 - https://www.freebasic.net/forum/viewtopic.php?p=203927#p203927
