@@ -18,19 +18,37 @@ Roadmap:
 2. [done] CPU reference simulated-annealing hillclimb (ground truth)
 3. [done] CUDA kernel: thousands of parallel annealing chains, homophonic subst., 6-grams
 4. [done] Validate on Zodiac-408 (GPU == CPU plaintext & score)
-5. [next] Performance tuning (the 309 MB 6-gram table is the memory bottleneck:
-   it far exceeds L2, so random lookups dominate — options: 5-gram fast path in cache,
-   shared-memory staging of hot state, texture/`__ldg` reads, fewer threads/block)
-6. [later] Expand to the other solver types
+5. [done] Performance profiling + tuning (see findings below)
+6. [later] Expand to the other solver types; algorithmic convergence (greedy "best letter"
+   moves like the original's g6b cache) to need fewer iterations
 
-### Benchmark (Zodiac-408, 6-grams, 102.4M total annealing steps)
+### Benchmark & tuning findings (Zodiac-408, RTX 4070 Laptop)
 
-| build | hardware | time | throughput |
-|-------|----------|------|-----------|
-| CPU   | 8 threads          | 24.1 s | 4.3M iters/s |
-| GPU   | RTX 4070 Laptop    | 9.7 s  | 10.6M iters/s (incl. table upload) |
+Kernel throughput (compute only, table upload excluded):
 
-At larger scale the GPU sustains ~21M iters/s (~5.5x the 8-thread CPU).
+| n-gram | table size | throughput | note |
+|--------|-----------|-----------|------|
+| 6-gram | 309 MB | ~22 Miter/s | exceeds L2 -> scattered-read bound |
+| 5-gram | 12 MB  | ~50 Miter/s | fits in L2 -> 2.3x faster |
+
+Aggregate vs the OpenMP CPU build (8 threads, ~4.3 Miter/s): GPU 6-gram ~5x, 5-gram ~11x.
+
+**The 6-gram kernel is memory-access-pattern bound, not occupancy bound.** Each annealing
+step does scattered 1-byte reads into the 309 MB table (each read pulls a full 32 B sector),
+and that table far exceeds the ~32 MB L2. Measured, and confirming this:
+
+- Register-cap sweep (`-maxrregcount` 64/48/40/32) to raise occupancy: no change (~21-22).
+- Thread-count sweep (8k -> 128k chains): throughput *fell* (21 -> 18) from L2/DRAM
+  contention. ~8-16k chains already saturates the memory subsystem.
+- `__ldg` read-only path and struct-of-arrays layout: neutral / negative (threads diverge,
+  so thread-local contiguous AoS caches better).
+
+So the real levers are NOT GPU knobs but **algorithmic**: use 5-grams when speed matters,
+or add greedy "best-letter" moves so fewer iterations are needed to converge. GPU's
+structural win is parallel breadth — thousands of independent restarts — which pays off on
+hard ciphers needing huge restart counts, more than on an easy one like 408.
+
+Tunables (env): `AZ_BLOCK` (threads/block, default 128), `AZ_MAXCHAINS` (default 16384).
 
 ## Commands
 
