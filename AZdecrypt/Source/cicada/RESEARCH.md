@@ -274,7 +274,86 @@ material and the most repeated 4‑grams) is the best place to test a new hypoth
 
 ---
 
-## 5. A skeptic's audit of the "27×27 totient map" solution
+## 5. Going further: structure probes and a keystream search
+
+Section 4 showed the simple attacks fail. Two more principled approaches confirm *why*, and
+one of them doubles as a positive control that proves the pipeline is sound.
+
+### 5.1 Structure probes
+
+Beyond the single-symbol IoC, four cheap probes test for any exploitable regularity:
+
+- **chi‑squared vs uniform**: is the single‑symbol distribution actually flat?
+- **digraphic IoC**: do adjacent pairs repeat more than chance (ratio 1.0 = random)?
+- **autocorrelation / Kasiski**: is there a repeating period (reported as a z‑score)?
+- **zlib compressibility vs random**: is there any redundancy a compressor can find?
+
+Run across the corpus, they behave like a calibrated instrument. The plaintext control page
+lights up on every probe; every unsolved page sits at the random baseline.
+
+| page | IoC | chi²z | digraphic IoC | best period (z) | compress vs random |
+|------|----:|------:|--------------:|----------------:|-------------------:|
+| *Loss of Divinity* (plaintext control) | 0.0612 | **78.1** | **5.55×** | d=37 (**z=8.0**) | **0.76×** |
+| p0‑2   | 0.0341 | −1.1 | 0.99× | d=35 (z=3.8) | 1.00× |
+| p3‑7   | 0.0346 |  0.7 | 1.03× | d=29 (z=1.9) | 1.00× |
+| p8‑14  | 0.0345 | −0.1 | 0.99× | d=24 (z=1.9) | 1.00× |
+| p15‑22 | 0.0345 |  0.1 | 1.04× | d=5  (z=2.6) | 1.00× |
+| p23‑26 | 0.0343 | −0.8 | 0.94× | d=38 (z=2.5) | 1.00× |
+| p27‑32 | 0.0342 | −1.6 | 0.97× | d=58 (z=1.9) | 1.00× |
+| p33‑39 | 0.0344 | −0.8 | 1.04× | d=6  (z=3.1) | 1.00× |
+| p40‑53 | 0.0345 |  0.7 | 1.03× | d=58 (z=1.6) | 1.00× |
+| p54‑55 | 0.0338 | −0.8 | 1.16× | d=45 (z=2.7) | 1.00× |
+
+The control shows digraphic IoC 5.6× random, chi² z=78, a period spike at z=8, and
+compresses to 0.76×. Every unsolved page shows digraphic IoC within a few percent of 1.0×,
+chi² |z| < 2, no period above z≈4 across 60 lags (expected under multiple testing on random
+data), and zero compressibility past random. There is no monographic, digraphic, periodic,
+or redundancy structure to exploit.
+
+### 5.2 A number-theoretic keystream search
+
+The flat statistics point to a keystream cipher, and the solved pages reveal Cicada's taste
+for primes and totients. So the natural attack is to brute‑force a library of deterministic
+integer sequences as keystreams (mod 29), both adding and subtracting, over small offsets,
+scoring each decrypt with a rune 4‑gram model. The library: primes, φ(prime), φ(n), Möbius
+μ, divisor count τ, σ, Fibonacci, Lucas, triangular numbers, squares, Trithemius `n`, prime
+gaps, Thue‑Morse, and the digits of π.
+
+**Positive control.** The search rediscovers *An End* with no hints. `totient(primes)`,
+subtract, offset 0 gives IoC **0.0552** and the text:
+
+```
+ANENDWITHINTHEDEEPWEBTHEREEXISTSAPAGETHA...   ("AN END, WITHIN THE DEEP WEB, THERE EXISTS A PAGE THAT...")
+```
+
+Its 4‑gram score is **−12.1** per window, cleanly separated from noise. That separation is
+what makes the negative results trustworthy.
+
+**Against the unsolved pages: nothing.** The best candidate for every page scores around
+**−14.6** (versus *An End*'s −12.1), leaves IoC at the random ~0.034, and reads as gibberish.
+
+| page | best stream | score | IoC | verdict |
+|------|-------------|------:|----:|---------|
+| p56_an_end (control) | totient(primes) | **−12.1** | **0.0552** | **recovered** ✓ |
+| p0‑2   | primes          | −14.6 | 0.0344 | no |
+| p3‑7   | n (Trithemius)  | −14.6 | 0.0345 | no |
+| p8‑14  | totient(primes) | −14.7 | 0.0350 | no |
+| p15‑22 | primes          | −14.7 | 0.0344 | no |
+| p23‑26 | primes          | −14.6 | 0.0343 | no |
+| p27‑32 | lucas           | −14.6 | 0.0343 | no |
+| p33‑39 | sigma(n)        | −14.6 | 0.0345 | no |
+| p40‑53 | tau(n)          | −14.7 | 0.0344 | no |
+| p54‑55 | lucas           | −14.6 | 0.0334 | no |
+
+None of the common number‑theoretic streams encipher these pages. Whatever keystream they
+use is either outside this (fairly complete) library, is keyed, or is combined with
+interrupters or transposition that desynchronise it. The scripts (`analysis/triage.py`,
+`analysis/keystream_search.py`) make both results reproducible, and the keystream search is
+a natural fit for GPU acceleration if the sequence library is widened.
+
+---
+
+## 6. A skeptic's audit of the "27×27 totient map" solution
 
 A detailed and sincere reconstruction by GitHub user **2retooz270703**
 ([Liber‑Primus‑27x27‑Map‑3‑Rune‑Nodes‑Totient‑Decryption](https://github.com/2retooz270703/Liber-Primus-27x27-Map-3-Rune-Nodes-Totient-Decryption))
@@ -332,7 +411,7 @@ Until one of those holds, it is best described as an elegant *hypothesis*, not a
 
 ---
 
-## 6. Lessons
+## 7. Lessons
 
 - **Measure before you attack.** IoC tells you in milliseconds whether a page is even in
   reach of your method. Most of the unsolved Liber Primus is not.
@@ -346,7 +425,7 @@ Until one of those holds, it is best described as an elegant *hypothesis*, not a
 
 ---
 
-## 7. Reproduce it yourself
+## 8. Reproduce it yourself
 
 ```bash
 cd AZdecrypt/Source/cicada
@@ -359,6 +438,13 @@ for p in p0-2 p3-7 p8-14 p15-22 p23-26 p27-32 p33-39 p40-53 p54-55; do
   ./cicada stats    data/pages/$p.txt
   ./cicada vigcrack data/pages/$p.txt 15 4 6
 done
+
+# the modern probes (Section 5)
+python3 analysis/triage.py            # structure probes
+python3 analysis/keystream_search.py  # number-theoretic keystream search (+ An End control)
+python3 analysis/frequency.py         # solved-corpus letter/word frequencies
+python3 analysis/difficulty.py        # difficulty ranking by IoC
+python3 analysis/charts.py            # regenerate the figures
 ```
 
 ## Credits
