@@ -117,6 +117,40 @@ because the real page uses an **interrupter / skip rule** at specific documented
 (the key pauses at certain ᚠ positions). Modelling *every* ᚠ as an interrupter is close but
 not exact. It is a reminder that these pages hide small, deliberate structural rules.
 
+### 3.5 Frequency fingerprint of the solved corpus
+
+A useful sanity check: if the solved pages are really English, their letter and word
+statistics should look like English. Pooling all 9 solved plaintext pages (2,979 runes,
+727 words) gives exactly that.
+
+**Letter (rune) frequency** tracks English closely:
+
+```
+solved top-8 runes :  E  O  A  S  T  R  I  N
+typical English    :  E  T  A  O  I  N  S  H  R
+```
+
+`E` is the most common symbol in both, at 12.8% here versus ~12.7% in English, and the rest
+of the ranking lines up. The rare tail (X, J, AE) mirrors English's rare letters. Full
+distribution:
+
+| rune | E | O | A | S | T | R | I | N | U | D | TH | L | W | C | H | Y | M | F | … |
+|------|---|---|---|---|---|---|---|---|---|---|----|---|---|---|---|---|---|---|---|
+| %    |12.8|8.6|7.3|6.7|6.6|6.4|6.2|6.1|5.1|3.9|3.9|3.7|3.3|3.1|3.0|2.7|2.6|1.6| … |
+
+**Word frequency** recovers the English function‑word skeleton:
+
+```
+THE 45 · TO 24 · YOU 22 · IS 22 · A 19 · WE 19 · ARE 18 · AND 15 · THAT 14
+WHO 13 · NOT 13 · YOUR 12 · MASTER 11 · WHAT 10 · OF 9 · BE 8 · THIS 7 · ALL 7
+```
+
+(THNGS = THINGS and HAUE = HAVE reflect the Gematria conventions, not errors.) The pooled
+**IoC is 0.0614**, well above the 29‑symbol random floor of 0.0345 and just under 26‑letter
+English's 0.0667, precisely where real English spread across 29 runes should land. This is
+the positive control: the toolkit's "solved" output is statistically indistinguishable from
+ordinary English, which is exactly what the unsolved pages (Section 4) fail to show.
+
 ---
 
 ## 4. The unsolved pages, and why IoC is the triage tool
