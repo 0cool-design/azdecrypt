@@ -36,6 +36,7 @@ encrypted with a hidden 5-rune key — proof the search harness works on a known
 
 ```
 cicada translit <file>                  runes -> Latin (+ gematria sum)
+cicada export   <file>                  runes -> space-separated 0-28 (load in AZdecrypt GUI)
 cicada stats    <file>                  rune frequencies + Index of Coincidence
 cicada decode   <file> <method> [args]  apply a known cipher:
     atbash
@@ -50,6 +51,15 @@ cicada subsolve <file> [ngram=3] [restarts=30] [iters=200000]
 Input files are UTF-8 rune text (runic block glyphs; `•⁘⁚⁖⁜` separators). An unsolved page
 has IoC near random (~0.034 over 29 symbols); readable English scores far higher under the
 rune n-gram model.
+
+Build/run from this folder: `make && ./cicada selftest`.
+
+### Loading pages in the AZdecrypt GUI
+
+AZdecrypt reads files as single-byte text, so raw UTF-8 runes appear garbled (an encoding
+issue, not a missing font — each 3-byte rune becomes 3 characters). Use `cicada export` to
+write the page as space-separated symbol numbers 0-28; ready-made number files are in
+`AZdecrypt/Ciphers/Liber Primus/`.
 
 ## Gematria Primus
 
