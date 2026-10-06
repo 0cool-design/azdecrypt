@@ -241,6 +241,32 @@ and `subsolve`, but not to someone who finds the right key, stream, or crib. The
 pages all sit in that flat bucket: statistically opaque, waiting on an insight rather than
 on more compute.
 
+#### Case study: why *An End* ranks last yet is solved
+
+The sharpest illustration is `p56_an_end`, the page with the lowest IoC of all (0.0325) and
+also one of the solved pages.
+
+| | length | IoC |
+|--|-------:|----:|
+| ciphertext (what the ranking sees) | 85 runes | 0.0325 |
+| plaintext (after solving) | 85 runes | 0.0700 |
+| random text, 85 symbols over 29 | | mean 0.0344, std 0.0030 |
+
+Two effects stack. First, *An End* uses a **non‑repeating key‑stream** (φ(prime) = prime − 1,
+mod 29): every position gets a different shift, so the frequencies are smeared toward
+uniform. The plaintext's own IoC is a thoroughly English **0.0700**, but the cipher hides
+it completely. Second, at only **85 runes** the IoC has a large sampling spread
+(std ≈ 0.0030): 0.0325 is just **0.64 standard deviations** below the random mean, and about
+**29% of genuinely random texts** score at or below it. The ciphertext is, for practical
+purposes, statistically indistinguishable from noise.
+
+It was solved anyway, because its key‑stream, though non‑repeating, is a simple
+**deterministic, guessable formula** (totients of primes, a motif Cicada used throughout)
+that a human could deduce. That is the real divide among the flat pages: *An End*'s stream
+was guessable; the unsolved pages' streams are not, or their keys have not been found. A
+flat IoC says "statistics will not help here." It says nothing about whether an insight
+will.
+
 Among the unsolved pages the IoC differences are noise‑level (0.034–0.0346), so ranking
 them against each other is low confidence. If forced: `p40‑53` (3,008 runes, the most
 material and the most repeated 4‑grams) is the best place to test a new hypothesis, and
