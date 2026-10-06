@@ -36,6 +36,17 @@ static int cmd_translit(int argc, char** argv) {
     return 0;
 }
 
+// Export a rune file as space-separated indices 0..28 — the format AZdecrypt (and most
+// cipher tools) can ingest, since it reads UTF-8 runes as garbled single-byte characters.
+static int cmd_export(int argc, char** argv) {
+    if (argc < 1) { std::fprintf(stderr, "usage: cicada export <file>\n"); return 2; }
+    auto idx = gematria::parse_runes(read_file(argv[0]));
+    for (size_t i = 0; i < idx.size(); i++)
+        std::printf("%d%s", idx[i], i + 1 < idx.size() ? " " : "\n");
+    std::fprintf(stderr, "[%zu symbols, space-separated 0-28]\n", idx.size());
+    return 0;
+}
+
 static int cmd_stats(int argc, char** argv) {
     if (argc < 1) { std::fprintf(stderr, "usage: cicada stats <file>\n"); return 2; }
     auto idx = gematria::parse_runes(read_file(argv[0]));
@@ -227,6 +238,7 @@ int main(int argc, char** argv) {
                      "cicada — Liber Primus / Gematria Primus toolkit\n"
                      "usage: cicada <command> [args]\n"
                      "  translit <file>                 runes -> Latin\n"
+                     "  export <file>                   runes -> space-separated 0-28 (for AZdecrypt)\n"
                      "  stats <file>                    frequency + IoC\n"
                      "  decode <file> <method> [args]   atbash|caesar|vigenere|totient|primes\n"
                      "  vigcrack <file> [maxlen] ...     search for a Vigenere key (hypothesis)\n"
@@ -236,6 +248,7 @@ int main(int argc, char** argv) {
     }
     std::string cmd = argv[1];
     if (cmd == "translit") return cmd_translit(argc - 2, argv + 2);
+    if (cmd == "export") return cmd_export(argc - 2, argv + 2);
     if (cmd == "stats") return cmd_stats(argc - 2, argv + 2);
     if (cmd == "decode") return cmd_decode(argc - 2, argv + 2);
     if (cmd == "vigcrack") return cmd_vigcrack(argc - 2, argv + 2);
