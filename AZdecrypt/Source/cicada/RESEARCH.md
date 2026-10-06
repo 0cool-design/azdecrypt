@@ -121,12 +121,41 @@ not exact. It is a reminder that these pages hide small, deliberate structural r
 
 ## 4. The unsolved pages, and why IoC is the triage tool
 
-Before throwing CPU at a page, measure its **Index of Coincidence**. For a 29‑symbol
-alphabet, random text sits at 1/29 ≈ 0.0345; English‑in‑runes runs noticeably higher
-(*Loss of Divinity* = 0.0612). IoC survives monoalphabetic ciphers (Atbash, Caesar, simple
-substitution) but collapses under polyalphabetic / running‑key schemes.
+### A quick primer on the Index of Coincidence
 
-Running the full unsolved corpus:
+Not everyone has met this measure, so it is worth a paragraph. The **Index of Coincidence**
+(IC or IoC), introduced by William F. Friedman in the 1920s, is the probability that two
+symbols picked at random from a text are the same letter. You compute it from the symbol
+counts `nᵢ` over an alphabet of size `c`, with `N` symbols total:
+
+```
+IC = Σ nᵢ(nᵢ − 1) / [ N(N − 1) ]
+```
+
+The useful property is that natural language is *lumpy*: a few letters (E, T, A …) are very
+common, so two random draws land on the same letter more often than pure chance. The
+reference values for the ordinary **26‑letter English** alphabet are:
+
+| text | IC |
+|------|----|
+| English prose | **≈ 0.0667** (commonly quoted in the 0.0667–0.0686 range) |
+| uniform random over 26 letters | 1/26 ≈ 0.0385 |
+
+So English is almost **1.75×** as "coincidental" as random noise. That gap is what makes IC
+a cheap, powerful first test.
+
+Two caveats matter for the Liber Primus. First, the classic 0.0667 figure is specific to a
+**26‑letter** alphabet; the Gematria Primus has **29 symbols**, which spreads the
+probability thinner and lowers every baseline. For 29 symbols, uniform random is
+1/29 ≈ **0.0345**, and real English written in the 29 runes measures lower than 0.0667 as
+well (the plaintext *Loss of Divinity* page comes in at **0.0612**). Second, and crucially:
+IC is **invariant under monoalphabetic ciphers** (Atbash, Caesar, simple substitution just
+relabel the symbols, leaving the counts `nᵢ` untouched), but it **collapses toward the
+random baseline under polyalphabetic or running‑key ciphers**, which smear each plaintext
+letter across many ciphertext symbols. That single number therefore tells you *which family*
+of cipher you are even allowed to hope for, before you spend a second of CPU.
+
+### Running the full unsolved corpus
 
 | page group | runes | IoC | periodic‑Vigenère + substitution search |
 |------------|------:|-----:|:--|
