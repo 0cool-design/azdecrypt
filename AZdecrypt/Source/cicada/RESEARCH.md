@@ -138,12 +138,16 @@ distribution:
 |------|---|---|---|---|---|---|---|---|---|---|----|---|---|---|---|---|---|---|---|
 | %    |12.8|8.6|7.3|6.7|6.6|6.4|6.2|6.1|5.1|3.9|3.9|3.7|3.3|3.1|3.0|2.7|2.6|1.6| … |
 
+![Rune frequency across the solved corpus](assets/freq_letters.png)
+
 **Word frequency** recovers the English function‑word skeleton:
 
 ```
 THE 45 · TO 24 · YOU 22 · IS 22 · A 19 · WE 19 · ARE 18 · AND 15 · THAT 14
 WHO 13 · NOT 13 · YOUR 12 · MASTER 11 · WHAT 10 · OF 9 · BE 8 · THIS 7 · ALL 7
 ```
+
+![Most common words in the solved corpus](assets/freq_words.png)
 
 (THNGS = THINGS and HAUE = HAVE reflect the Gematria conventions, not errors.) The pooled
 **IoC is 0.0614**, well above the 29‑symbol random floor of 0.0345 and just under 26‑letter
@@ -213,6 +217,34 @@ This is not a weakness of the tool; it's the tool telling the truth. The solved 
 *simple* ciphers and left *detectable* structure. The unsolved pages left none, consistent
 with a non‑repeating key‑stream (or something stronger), exactly the class these attacks
 cannot break, and exactly why no one has broken them.
+
+### Ranking every page by predicted difficulty
+
+Sorting all pages by IoC gives a difficulty forecast for *statistical* cryptanalysis. The
+ranking validates itself: every page it calls easy was in fact solved, and every flat page
+among the numbered ranges is unsolved.
+
+![Liber Primus pages ranked by predicted difficulty](assets/difficulty.png)
+
+| tier | pages | reading |
+|------|-------|---------|
+| **Easy** (IoC > 0.055) | `0_koan_1`, `0_warning`, `p57_parable`, `0_loss_of_divinity`, `jpg229` | monoalphabetic or plaintext; all solved |
+| **Medium** (~0.05) | `0_wisdom` | some structure; solved |
+| **Hard** (~0.04) | `0_welcome`, `jpg107‑167` | near‑random; solved by *key/insight*, not statistics |
+| **Hardest** (flat ~0.034) | `p3‑7`, `p40‑53`, `p15‑22`, `p8‑14`, `p33‑39`, `p23‑26`, `p27‑32`, `p0‑2`, `p54‑55` | polyalphabetic/running‑key; all unsolved |
+
+**The essential caveat.** Difficulty here means *resistance to statistical attack*, not
+unsolvability. Look at `p56_an_end`: its IoC (0.0325) is the lowest of all, yet it is
+**solved**, because the totient key‑stream was *deduced*, not found statistically. The same
+is true of `0_welcome` (solved with the key DIVINITY). A flat page is immune to `vigcrack`
+and `subsolve`, but not to someone who finds the right key, stream, or crib. The unsolved
+pages all sit in that flat bucket: statistically opaque, waiting on an insight rather than
+on more compute.
+
+Among the unsolved pages the IoC differences are noise‑level (0.034–0.0346), so ranking
+them against each other is low confidence. If forced: `p40‑53` (3,008 runes, the most
+material and the most repeated 4‑grams) is the best place to test a new hypothesis, and
+`p54‑55` (308 runes, flattest, no repeats) the least promising.
 
 ---
 
