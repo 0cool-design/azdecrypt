@@ -4,6 +4,9 @@ A module (in this AZdecrypt fork) for working with Cicada 3301's **Liber Primus*
 29-rune **Gematria Primus** alphabet, the cipher methods used on the *solved* pages, and a
 statistical search harness for testing hypotheses about the *unsolved* ones.
 
+📝 **Writeup:** [RESEARCH.md](RESEARCH.md) — reproducing the solved pages, why the unsolved
+ones resist (an IoC triage), and a skeptic's audit of the "27×27 totient map" solution.
+
 ## ⚠️ Honest expectations
 
 17 Liber Primus pages were solved within months of release in 2014. The remaining ~58 have
