@@ -10,10 +10,10 @@
   transliterates the 29‑rune **Gematria Primus** alphabet and applies the cipher methods
   used on the solved pages (Atbash, Vigenère, totient/prime key‑streams), plus a
   statistical search harness.
-- It **reproduces the known solves exactly** — e.g. the *A Warning* page (Atbash) and the
+- It **reproduces the known solves exactly**. The *A Warning* page (Atbash) and the
   *An End* page (totient) decrypt to clean English, and *The Loss of Divinity* turns out to
   be plaintext.
-- Run systematically against the **unsolved** pages, it produces **nothing** — and the
+- Run systematically against the **unsolved** pages, it produces **nothing**, and the
   Index of Coincidence explains why: those pages are statistically flat (~0.034, i.e.
   random over 29 symbols), which rules out the whole class of attacks that cracked the
   easy pages.
@@ -44,7 +44,7 @@ letter (or digraph) and to a prime number, in a fixed order (index 0–28):
 
 Two facts matter throughout: several runes are **digraphs** (TH, EO, NG, OE, AE, IA, EA),
 and several Latin letters are **ambiguous** (U/V, C/K, S/Z share a rune). This ambiguity is
-a recurring source of false confidence — it gives any decoder extra freedom.
+a recurring source of false confidence, since it gives any decoder extra freedom.
 
 Of ~74 pages, **17 were solved within months of release in 2014**; the remaining ~57 have
 resisted the entire internet for over a decade.
@@ -67,14 +67,14 @@ cicada selftest / cracktest validation on known answers
 
 It is **validated on known answers**: `selftest` reproduces the published *A Warning*
 transliteration exactly, and `cracktest` encrypts known English‑in‑runes with a hidden key
-and confirms the search recovers it. That matters — a search tool you can't trust on a
+and confirms the search recovers it. That matters: a search tool you can't trust on a
 known case is worthless on an unknown one.
 
 ---
 
 ## 3. Reproducing the solved pages
 
-### 3.1 *A Warning* — Atbash
+### 3.1 *A Warning*: Atbash
 
 The first page is the 29‑rune alphabet reversed (index → 28 − index):
 
@@ -83,12 +83,12 @@ cicada decode 0_warning.txt atbash
 ```
 > A WARNING. BELIEVE NOTHING FROM THIS BOOK. EXCEPT WHAT YOU KNOW TO BE TRUE.
 > TEST THE KNOWLEDGE. FIND YOUR TRUTH. EXPERIENCE YOUR DEATH. DO NOT EDIT OR
-> CHANGE THIS BOOK — OR THE MESSAGE CONTAINED WITHIN — EITHER THE WORDS OR THEIR
+> CHANGE THIS BOOK, OR THE MESSAGE CONTAINED WITHIN, EITHER THE WORDS OR THEIR
 > NUMBERS. FOR ALL IS SACRED.
 
 (BOOC→BOOK, CNOW→KNOW, BELIEUE→BELIEVE from the C/K and U/V ambiguity.)
 
-### 3.2 *An End* (p56) — totient key‑stream
+### 3.2 *An End* (p56): totient key‑stream
 
 Here the key‑stream is φ(pₙ) = pₙ − 1 for the n‑th prime, mod 29, subtracted from the text:
 
@@ -97,10 +97,10 @@ cicada decode p56_an_end.txt totient
 ```
 > AN END. WITHIN THE DEEP WEB, THERE EXISTS A PAGE THAT HASHES TO …
 
-### 3.3 *The Loss of Divinity* — not a cipher at all
+### 3.3 *The Loss of Divinity*: not a cipher at all
 
-A good lesson in not assuming encryption. This page's Index of Coincidence is **0.0612** —
-English‑level, not random — and the raw transliteration is already plain English:
+A good lesson in not assuming encryption. This page's Index of Coincidence is **0.0612**
+(English‑level, not random), and the raw transliteration is already plain English:
 
 ```
 cicada translit 0_loss_of_divinity.txt
@@ -110,12 +110,12 @@ cicada translit 0_loss_of_divinity.txt
 
 There is nothing to "solve": it is a direct rune transliteration.
 
-### 3.4 *Welcome* — Vigenère (key DIVINITY), with a caveat
+### 3.4 *Welcome*: Vigenère (key DIVINITY), with a caveat
 
 Vigenère with key `DIVINITY` decrypts the opening correctly (`WELCO…`) and then drifts,
 because the real page uses an **interrupter / skip rule** at specific documented indices
 (the key pauses at certain ᚠ positions). Modelling *every* ᚠ as an interrupter is close but
-not exact — a reminder that these pages hide small, deliberate structural rules.
+not exact. It is a reminder that these pages hide small, deliberate structural rules.
 
 ---
 
@@ -143,12 +143,12 @@ Running the full unsolved corpus:
 **Every unsolved page sits on the random baseline.** That is a strong, honest signal: the
 statistics are flat, so there is no periodic key or monoalphabetic mapping to recover. The
 substitution hillclimber degenerates to smearing everything onto a couple of common runes
-(`SSESSEE…`) — the textbook failure mode on near‑random input — and the Vigenère search
+(`SSESSEE…`), the textbook failure mode on near‑random input, and the Vigenère search
 returns gibberish at every key length.
 
 This is not a weakness of the tool; it's the tool telling the truth. The solved pages used
 *simple* ciphers and left *detectable* structure. The unsolved pages left none, consistent
-with a non‑repeating key‑stream (or something stronger) — exactly the class these attacks
+with a non‑repeating key‑stream (or something stronger), exactly the class these attacks
 cannot break, and exactly why no one has broken them.
 
 ---
@@ -156,8 +156,8 @@ cannot break, and exactly why no one has broken them.
 ## 5. A skeptic's audit of the "27×27 totient map" solution
 
 A detailed and sincere reconstruction circulating online proposes that pages 0–2 (the first
-729 runes = 27×27 grid) decrypt via a custom route — mirrored 3‑rune nodes, Euler‑totient
-transforms, Möbius‑function phase selection, coordinate selectors, a "hidden value" rule —
+729 runes = 27×27 grid) decrypt via a custom route (mirrored 3‑rune nodes, Euler‑totient
+transforms, Möbius‑function phase selection, coordinate selectors, a "hidden value" rule)
 to the text *"AS I GO, THE WEATHER TURNS COLD … THE IDEA OF THE END IS DEATH. SEE YOU
 SOON,"* supported by striking numerology.
 
@@ -175,7 +175,7 @@ I checked the numbers independently. **They are all correct:**
 So the arithmetic is real. **But correct arithmetic is not a verified decryption**, for
 three concrete reasons:
 
-1. **Degrees of freedom.** The method has many tunable choices — route selection through
+1. **Degrees of freedom.** The method has many tunable choices: route selection through
    the grid, which 3‑rune nodes to use, mirrored vs non‑mirrored, phase selection,
    coordinate selectors, state roles, a "hidden value" rule. Combined with the Gematria
    ambiguity (U/V, C/K, S/Z, and digraph‑vs‑two‑letters), a system with this much freedom
@@ -187,11 +187,11 @@ three concrete reasons:
    expected by chance (apophenia). The author even notes the Y·O·U product "does not
    determine letter order."
 3. **It doesn't match how the genuine pages work.** Every confirmed solve uses *one simple,
-   deterministic* cipher with unambiguous output, reproducible by anyone in a single step —
+   deterministic* cipher with unambiguous output, reproducible by anyone in a single step,
    and Cicada built in hard verification (e.g. *An End* literally hashes to a specific
    value). A real solution of 0–2 would be similarly clean and independently checkable.
 
-None of this means the author was dishonest — the work is careful and the structure (e.g.
+None of this means the author was dishonest. The work is careful, and the structure (e.g.
 21 = 3 × 7 = the central rune NG; 27 = 3³ and 343 = 7³ in the final blocks) is genuinely
 elegant. It means the evidence offered is not the *kind* of evidence that settles a cipher.
 
@@ -202,7 +202,7 @@ elegant. It means the evidence offered is not the *kind* of evidence that settle
 - A **null‑hypothesis control**: the same ruleset yields English from the real ciphertext
   but *not* from shuffled/random runes of identical statistics. If it can produce English
   from anything, it proves nothing.
-- An **independently checkable artifact** — a valid hash/onion like the real pages, or
+- An **independently checkable artifact**: a valid hash/onion like the real pages, or
   correctly solving a *different* unsolved page that then matches a known Cicada value.
 
 Until one of those holds, it is best described as an elegant *hypothesis*, not a solve.
@@ -219,7 +219,7 @@ Until one of those holds, it is best described as an elegant *hypothesis*, not a
   coincidences for any short text. Proof comes from *constraint and reproducibility*, not
   from the number of patterns you can find after the fact.
 - **The honest negative result is a result.** "These pages are statistically flat and resist
-  this entire class of attack" is more useful — and more truthful — than a forced reading.
+  this entire class of attack" is more useful, and more truthful, than a forced reading.
 
 ---
 
