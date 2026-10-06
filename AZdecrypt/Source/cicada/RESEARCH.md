@@ -1,34 +1,49 @@
-# Reproducing and stress‑testing Liber Primus decryptions
+# Reproducing and Stress-Testing Liber Primus Decryptions
 
-*A small toolkit, the pages it can and cannot read, and an evidence-based review of a popular "solution."*
-
----
-
-## TL;DR
-
-- I built a tiny, self‑contained toolkit (`cicada`) for Cicada 3301's **Liber Primus**: it
-  transliterates the 29‑rune **Gematria Primus** alphabet and applies the cipher methods
-  used on the solved pages (Atbash, Vigenère, totient/prime key‑streams), plus a
-  statistical search harness.
-- It **reproduces the known solves exactly**. The *A Warning* page (Atbash) and the
-  *An End* page (totient) decrypt to clean English, and *The Loss of Divinity* turns out to
-  be plaintext.
-- Run systematically against the **unsolved** pages, it produces **nothing**, and the
-  Index of Coincidence explains why: those pages are statistically flat (~0.034, i.e.
-  random over 29 symbols), which rules out the whole class of attacks that cracked the
-  easy pages.
-- I also audited a widely shared "27×27 totient map" solution. **Its arithmetic is
-  genuinely correct, but the arithmetic does not verify the decryption.** I explain the
-  difference, and what *would* constitute proof.
-
-Everything here is reproducible with the commands shown.
+*A compact toolkit, the pages it can and cannot read, and an evidence-based review of a popular proposed solution.*
 
 ---
 
-## 1. Background: Gematria Primus
+## Abstract
 
-The Liber Primus is written in a 29‑symbol runic alphabet. Each rune maps to a Latin
-letter (or digraph) and to a prime number, in a fixed order (index 0–28):
+The Cicada 3301 *Liber Primus* is a corpus of roughly 74 pages written in a 29-symbol
+runic alphabet, the Gematria Primus. About 17 pages were solved within months of their 2014
+release; the remainder have resisted public cryptanalysis for over a decade. We present
+`cicada`, a small, dependency-free C++ toolkit that transliterates the Gematria Primus and
+implements the cipher methods known to decrypt the solved pages (Atbash, Vigenère, and
+totient/prime key-streams), together with a statistical search harness and a set of analysis
+scripts. The toolkit reproduces the published solutions exactly and is validated against
+planted known-answer ciphers. Applied systematically to the unsolved pages it recovers no
+plaintext, and we show through the Index of Coincidence (IoC) and a battery of structure
+probes that these pages are statistically indistinguishable from uniform noise over 29
+symbols (IoC ≈ 0.034). This observation excludes the entire class of monoalphabetic and
+periodic-polyalphabetic attacks that broke the easy pages. A number-theoretic key-stream
+search rediscovers the solved *An End* page as a positive control but yields nothing on the
+unsolved corpus. Finally, we evaluate a widely circulated "27×27 totient map" proposal and
+find that although its arithmetic is correct, it does not meet the evidentiary standard
+required to verify a decryption. All results are reproducible from the commands in Section 8.
+
+**Key findings.**
+
+- We implement a self-contained toolkit (`cicada`) for the *Liber Primus* that transliterates
+  the 29-rune Gematria Primus and applies the cipher methods used on the solved pages (Atbash,
+  Vigenère, totient/prime key-streams), plus a statistical search harness.
+- It reproduces the known solves exactly. The *A Warning* page (Atbash) and the *An End* page
+  (totient key-stream) decrypt to clean English, and *The Loss of Divinity* is shown to be
+  plaintext.
+- Run systematically against the unsolved pages it produces nothing, and the Index of
+  Coincidence explains why: those pages are statistically flat (≈ 0.034, i.e. random over 29
+  symbols), which rules out the whole class of attacks that cracked the easy pages.
+- We independently audit a widely shared "27×27 totient map" solution. Its arithmetic is
+  genuinely correct, but the arithmetic does not verify the decryption. We make the
+  distinction precise and state what would constitute proof.
+
+---
+
+## 1. Background: the Gematria Primus
+
+The *Liber Primus* is written in a 29-symbol runic alphabet. Each rune maps to a Latin letter
+(or digraph) and to a prime number, in a fixed order (index 0–28) [5, 6]:
 
 | idx | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 |
 |-----|---|---|---|---|---|---|---|---|---|---|----|----|----|----|----|
@@ -42,19 +57,20 @@ letter (or digraph) and to a prime number, in a fixed order (index 0–28):
 | lat | S | T | B | E | M | L | NG | OE | D | A | AE | Y | IA | EA |
 | pri | 53 | 59 | 61 | 67 | 71 | 73 | 79 | 83 | 89 | 97 | 101 | 103 | 107 | 109 |
 
-Two facts matter throughout: several runes are **digraphs** (TH, EO, NG, OE, AE, IA, EA),
-and several Latin letters are **ambiguous** (U/V, C/K, S/Z share a rune). This ambiguity is
-a recurring source of false confidence, since it gives any decoder extra freedom.
+Two properties matter throughout. Several runes are **digraphs** (TH, EO, NG, OE, AE, IA, EA),
+and several Latin letters are **ambiguous** (U/V, C/K, S/Z share a rune). This ambiguity is a
+recurring source of false confidence, because it grants any proposed decoder additional degrees
+of freedom.
 
-Of ~74 pages, **17 were solved within months of release in 2014**; the remaining ~57 have
-resisted the entire internet for over a decade.
+Of the roughly 74 pages, 17 were solved within months of release in 2014; the remaining ~57
+have resisted the public for over a decade.
 
 ---
 
-## 2. The toolkit
+## 2. The toolkit (materials and methods)
 
-`cicada` is a few hundred lines of C++ with no dependencies. It reads the same rune files
-the community uses and offers:
+`cicada` is a few hundred lines of C++ with no external dependencies. It reads the same rune
+files used by the community [2] and provides:
 
 ```
 cicada translit <file>     runes -> Latin (+ gematria sum)
@@ -65,18 +81,18 @@ cicada subsolve <file> ...  29-symbol substitution hillclimb (hypothesis tester)
 cicada selftest / cracktest validation on known answers
 ```
 
-It is **validated on known answers**: `selftest` reproduces the published *A Warning*
-transliteration exactly, and `cracktest` encrypts known English‑in‑runes with a hidden key
-and confirms the search recovers it. That matters: a search tool you can't trust on a
-known case is worthless on an unknown one.
+The toolkit is **validated on known answers**. `selftest` reproduces the published *A Warning*
+transliteration exactly, and `cracktest` encrypts known English-in-runes under a hidden key and
+confirms that the search recovers it. This matters methodologically: a search tool that cannot
+be trusted on a known case carries no weight on an unknown one.
 
 ---
 
-## 3. Reproducing the solved pages
+## 3. Reproducing the solved pages (positive controls)
 
 ### 3.1 *A Warning*: Atbash
 
-The first page is the 29‑rune alphabet reversed (index → 28 − index):
+The first page is the 29-rune alphabet reversed (index → 28 − index):
 
 ```
 cicada decode 0_warning.txt atbash
@@ -88,9 +104,10 @@ cicada decode 0_warning.txt atbash
 
 (BOOC→BOOK, CNOW→KNOW, BELIEUE→BELIEVE from the C/K and U/V ambiguity.)
 
-### 3.2 *An End* (p56): totient key‑stream
+### 3.2 *An End* (p56): totient key-stream
 
-Here the key‑stream is φ(pₙ) = pₙ − 1 for the n‑th prime, mod 29, subtracted from the text:
+Here the key-stream is φ(pₙ) = pₙ − 1 for the n-th prime, taken mod 29 and subtracted from the
+text:
 
 ```
 cicada decode p56_an_end.txt totient
@@ -99,8 +116,8 @@ cicada decode p56_an_end.txt totient
 
 ### 3.3 *The Loss of Divinity*: not a cipher at all
 
-A good lesson in not assuming encryption. This page's Index of Coincidence is **0.0612**
-(English‑level, not random), and the raw transliteration is already plain English:
+This page is a useful reminder not to assume encryption. Its Index of Coincidence is **0.0612**
+(English-level, not random), and the raw transliteration is already plain English:
 
 ```
 cicada translit 0_loss_of_divinity.txt
@@ -108,19 +125,19 @@ cicada translit 0_loss_of_divinity.txt
 > THE LOSS OF DIVINITY. THE CIRCUMFERENCE PRACTICES THREE BEHAVIOURS WHICH CAUSE
 > THE LOSS OF DIVINITY. CONSUMPTION: WE CONSUME TOO MUCH … PRESERVATION … ADHERENCE …
 
-There is nothing to "solve": it is a direct rune transliteration.
+There is nothing to "solve": the page is a direct rune transliteration.
 
 ### 3.4 *Welcome*: Vigenère (key DIVINITY), with a caveat
 
-Vigenère with key `DIVINITY` decrypts the opening correctly (`WELCO…`) and then drifts,
-because the real page uses an **interrupter / skip rule** at specific documented indices
-(the key pauses at certain ᚠ positions). Modelling *every* ᚠ as an interrupter is close but
-not exact. It is a reminder that these pages hide small, deliberate structural rules.
+Vigenère with the key `DIVINITY` decrypts the opening correctly (`WELCO…`) and then drifts,
+because the page employs a documented **interrupter / skip rule** at specific indices (the key
+pauses at certain ᚠ positions). Modelling *every* ᚠ as an interrupter is close but not exact.
+This is a reminder that these pages hide small, deliberate structural rules.
 
 ### 3.5 Frequency fingerprint of the solved corpus
 
-A useful sanity check: if the solved pages are really English, their letter and word
-statistics should look like English. Pooling all 9 solved plaintext pages (2,979 runes,
+A useful sanity check: if the solved pages are genuinely English, their letter and word
+statistics should resemble English. Pooling all nine solved plaintext pages (2,979 runes,
 727 words) gives exactly that.
 
 **Letter (rune) frequency** tracks English closely:
@@ -130,8 +147,8 @@ solved top-8 runes :  E  O  A  S  T  R  I  N
 typical English    :  E  T  A  O  I  N  S  H  R
 ```
 
-`E` is the most common symbol in both, at 12.8% here versus ~12.7% in English, and the rest
-of the ranking lines up. The rare tail (X, J, AE) mirrors English's rare letters. Full
+`E` is the most common symbol in both, at 12.8% here versus ≈ 12.7% in English, and the rest of
+the ranking lines up. The rare tail (X, J, AE) mirrors English's rare letters. Full
 distribution:
 
 | rune | E | O | A | S | T | R | I | N | U | D | TH | L | W | C | H | Y | M | F | … |
@@ -140,7 +157,7 @@ distribution:
 
 ![Rune frequency across the solved corpus](assets/freq_letters.png)
 
-**Word frequency** recovers the English function‑word skeleton:
+**Word frequency** recovers the English function-word skeleton:
 
 ```
 THE 45 · TO 24 · YOU 22 · IS 22 · A 19 · WE 19 · ARE 18 · AND 15 · THAT 14
@@ -150,78 +167,77 @@ WHO 13 · NOT 13 · YOUR 12 · MASTER 11 · WHAT 10 · OF 9 · BE 8 · THIS 7 ·
 ![Most common words in the solved corpus](assets/freq_words.png)
 
 (THNGS = THINGS and HAUE = HAVE reflect the Gematria conventions, not errors.) The pooled
-**IoC is 0.0614**, well above the 29‑symbol random floor of 0.0345 and just under 26‑letter
-English's 0.0667, precisely where real English spread across 29 runes should land. This is
-the positive control: the toolkit's "solved" output is statistically indistinguishable from
+**IoC is 0.0614**, well above the 29-symbol random floor of 0.0345 and just under 26-letter
+English's 0.0667, precisely where real English spread across 29 runes should land. This serves
+as the positive control: the toolkit's "solved" output is statistically indistinguishable from
 ordinary English, which is exactly what the unsolved pages (Section 4) fail to show.
 
 ---
 
-## 4. The unsolved pages, and why IoC is the triage tool
+## 4. The unsolved pages, and the Index of Coincidence as a triage tool
 
-### A quick primer on the Index of Coincidence
+### 4.1 A primer on the Index of Coincidence
 
-Not everyone has met this measure, so it is worth a paragraph. The **Index of Coincidence**
-(IC or IoC), introduced by William F. Friedman in the 1920s, is the probability that two
-symbols picked at random from a text are the same letter. You compute it from the symbol
-counts `nᵢ` over an alphabet of size `c`, with `N` symbols total:
+The **Index of Coincidence** (IC or IoC), introduced by Friedman in the 1920s [1], is the
+probability that two symbols drawn at random from a text are the same letter. It is computed
+from the symbol counts `nᵢ` over an alphabet of size `c`, with `N` symbols total:
 
 ```
 IC = Σ nᵢ(nᵢ − 1) / [ N(N − 1) ]
 ```
 
 The useful property is that natural language is *lumpy*: a few letters (E, T, A …) are very
-common, so two random draws land on the same letter more often than pure chance. The
-reference values for the ordinary **26‑letter English** alphabet are:
+common, so two random draws land on the same letter more often than pure chance. The reference
+values for the ordinary **26-letter English** alphabet are:
 
 | text | IC |
 |------|----|
 | English prose | **≈ 0.0667** (commonly quoted in the 0.0667–0.0686 range) |
 | uniform random over 26 letters | 1/26 ≈ 0.0385 |
 
-So English is almost **1.75×** as "coincidental" as random noise. That gap is what makes IC
-a cheap, powerful first test.
+English is therefore almost **1.75×** as "coincidental" as random noise. That gap is what makes
+the IC a cheap and powerful first test.
 
-Two caveats matter for the Liber Primus. First, the classic 0.0667 figure is specific to a
-**26‑letter** alphabet; the Gematria Primus has **29 symbols**, which spreads the
-probability thinner and lowers every baseline. For 29 symbols, uniform random is
-1/29 ≈ **0.0345**, and real English written in the 29 runes measures lower than 0.0667 as
-well (the plaintext *Loss of Divinity* page comes in at **0.0612**). Second, and crucially:
-IC is **invariant under monoalphabetic ciphers** (Atbash, Caesar, simple substitution just
-relabel the symbols, leaving the counts `nᵢ` untouched), but it **collapses toward the
-random baseline under polyalphabetic or running‑key ciphers**, which smear each plaintext
-letter across many ciphertext symbols. That single number therefore tells you *which family*
-of cipher you are even allowed to hope for, before you spend a second of CPU.
+Two caveats matter for the *Liber Primus*. First, the classic 0.0667 figure is specific to a
+**26-letter** alphabet; the Gematria Primus has **29 symbols**, which spreads the probability
+thinner and lowers every baseline. For 29 symbols, uniform random is 1/29 ≈ **0.0345**, and
+real English written in the 29 runes measures lower than 0.0667 as well (the plaintext *Loss of
+Divinity* page comes in at **0.0612**). Second, and crucially: the IC is **invariant under
+monoalphabetic ciphers** (Atbash, Caesar, and simple substitution merely relabel the symbols,
+leaving the counts `nᵢ` untouched), but it **collapses toward the random baseline under
+polyalphabetic or running-key ciphers**, which smear each plaintext letter across many
+ciphertext symbols. That single number therefore indicates *which family* of cipher one may
+even hope for, before any CPU time is spent.
 
-### Running the full unsolved corpus
+### 4.2 Results on the full unsolved corpus
 
-| page group | runes | IoC | periodic‑Vigenère + substitution search |
+| page group | runes | IoC | periodic-Vigenère + substitution search |
 |------------|------:|-----:|:--|
-| p0‑2   | 729  | 0.0341 | no English |
-| p3‑7   | 1145 | 0.0346 | no English |
-| p8‑14  | 1729 | 0.0345 | no English |
-| p15‑22 | 1903 | 0.0345 | no English |
-| p23‑26 | 1021 | 0.0343 | no English |
-| p27‑32 | 1433 | 0.0342 | no English |
-| p33‑39 | 1680 | 0.0344 | no English |
-| p40‑53 | 3008 | 0.0345 | no English |
-| p54‑55 | 308  | 0.0338 | no English |
+| p0-2   | 729  | 0.0341 | no English |
+| p3-7   | 1145 | 0.0346 | no English |
+| p8-14  | 1729 | 0.0345 | no English |
+| p15-22 | 1903 | 0.0345 | no English |
+| p23-26 | 1021 | 0.0343 | no English |
+| p27-32 | 1433 | 0.0342 | no English |
+| p33-39 | 1680 | 0.0344 | no English |
+| p40-53 | 3008 | 0.0345 | no English |
+| p54-55 | 308  | 0.0338 | no English |
 
-**Every unsolved page sits on the random baseline.** That is a strong, honest signal: the
-statistics are flat, so there is no periodic key or monoalphabetic mapping to recover. The
-substitution hillclimber degenerates to smearing everything onto a couple of common runes
-(`SSESSEE…`), the textbook failure mode on near‑random input, and the Vigenère search
-returns gibberish at every key length.
+**Every unsolved page sits on the random baseline.** This is a strong and informative negative
+result: the statistics are flat, so there is no periodic key or monoalphabetic mapping to
+recover. The substitution hillclimber degenerates to smearing everything onto a couple of
+common runes (`SSESSEE…`), the textbook failure mode on near-random input, and the Vigenère
+search returns gibberish at every key length.
 
-This is not a weakness of the tool; it's the tool telling the truth. The solved pages used
-*simple* ciphers and left *detectable* structure. The unsolved pages left none, consistent
-with a non‑repeating key‑stream (or something stronger), exactly the class these attacks
-cannot break, and exactly why no one has broken them.
+This is not a limitation of the tool; it is the tool reporting the truth. The solved pages used
+*simple* ciphers and left *detectable* structure. The unsolved pages left none, consistent with
+a non-repeating key-stream (or something stronger) — precisely the class these attacks cannot
+break, and precisely why no one has broken them.
 
-### Ranking every page by predicted difficulty
+### 4.3 Ranking every page by predicted difficulty
 
 Sorting all pages by IoC gives a difficulty forecast for *statistical* cryptanalysis. The
-ranking validates itself: every page it calls easy was in fact solved, and every flat page
+ranking validates itself: every page it labels easy was in fact solved, and every flat page
 among the numbered ranges is unsolved.
 
 ![Liber Primus pages ranked by predicted difficulty](assets/difficulty.png)
@@ -230,16 +246,15 @@ among the numbered ranges is unsolved.
 |------|-------|---------|
 | **Easy** (IoC > 0.055) | `0_koan_1`, `0_warning`, `p57_parable`, `0_loss_of_divinity`, `jpg229` | monoalphabetic or plaintext; all solved |
 | **Medium** (~0.05) | `0_wisdom` | some structure; solved |
-| **Hard** (~0.04) | `0_welcome`, `jpg107‑167` | near‑random; solved by *key/insight*, not statistics |
-| **Hardest** (flat ~0.034) | `p3‑7`, `p40‑53`, `p15‑22`, `p8‑14`, `p33‑39`, `p23‑26`, `p27‑32`, `p0‑2`, `p54‑55` | polyalphabetic/running‑key; all unsolved |
+| **Hard** (~0.04) | `0_welcome`, `jpg107-167` | near-random; solved by *key/insight*, not statistics |
+| **Hardest** (flat ~0.034) | `p3-7`, `p40-53`, `p15-22`, `p8-14`, `p33-39`, `p23-26`, `p27-32`, `p0-2`, `p54-55` | polyalphabetic/running-key; all unsolved |
 
-**The essential caveat.** Difficulty here means *resistance to statistical attack*, not
-unsolvability. Look at `p56_an_end`: its IoC (0.0325) is the lowest of all, yet it is
-**solved**, because the totient key‑stream was *deduced*, not found statistically. The same
-is true of `0_welcome` (solved with the key DIVINITY). A flat page is immune to `vigcrack`
-and `subsolve`, but not to someone who finds the right key, stream, or crib. The unsolved
-pages all sit in that flat bucket: statistically opaque, waiting on an insight rather than
-on more compute.
+**An essential caveat.** Difficulty here means *resistance to statistical attack*, not
+unsolvability. Consider `p56_an_end`: its IoC (0.0325) is the lowest of all, yet the page is
+**solved**, because the totient key-stream was *deduced*, not found statistically. The same is
+true of `0_welcome` (solved with the key DIVINITY). A flat page is immune to `vigcrack` and
+`subsolve`, but not to someone who finds the right key, stream, or crib. The unsolved pages all
+sit in that flat bucket: statistically opaque, awaiting an insight rather than more compute.
 
 #### Case study: why *An End* ranks last yet is solved
 
@@ -252,72 +267,71 @@ also one of the solved pages.
 | plaintext (after solving) | 85 runes | 0.0700 |
 | random text, 85 symbols over 29 | | mean 0.0344, std 0.0030 |
 
-Two effects stack. First, *An End* uses a **non‑repeating key‑stream** (φ(prime) = prime − 1,
-mod 29): every position gets a different shift, so the frequencies are smeared toward
-uniform. The plaintext's own IoC is a thoroughly English **0.0700**, but the cipher hides
-it completely. Second, at only **85 runes** the IoC has a large sampling spread
-(std ≈ 0.0030): 0.0325 is just **0.64 standard deviations** below the random mean, and about
-**29% of genuinely random texts** score at or below it. The ciphertext is, for practical
-purposes, statistically indistinguishable from noise.
+Two effects stack. First, *An End* uses a **non-repeating key-stream** (φ(prime) = prime − 1,
+mod 29): every position receives a different shift, so the frequencies are smeared toward
+uniform. The plaintext's own IoC is a thoroughly English **0.0700**, but the cipher hides it
+completely. Second, at only **85 runes** the IoC has a large sampling spread (std ≈ 0.0030):
+0.0325 is just **0.64 standard deviations** below the random mean, and roughly **29% of
+genuinely random texts** score at or below it. The ciphertext is, for practical purposes,
+statistically indistinguishable from noise.
 
-It was solved anyway, because its key‑stream, though non‑repeating, is a simple
-**deterministic, guessable formula** (totients of primes, a motif Cicada used throughout)
-that a human could deduce. That is the real divide among the flat pages: *An End*'s stream
-was guessable; the unsolved pages' streams are not, or their keys have not been found. A
-flat IoC says "statistics will not help here." It says nothing about whether an insight
-will.
+It was solved nonetheless, because its key-stream, though non-repeating, is a simple
+**deterministic, guessable formula** (totients of primes, a motif Cicada used throughout) that
+a human could deduce. That is the real divide among the flat pages: *An End*'s stream was
+guessable; the unsolved pages' streams are not, or their keys have not been found. A flat IoC
+says "statistics will not help here." It says nothing about whether an insight will.
 
-Among the unsolved pages the IoC differences are noise‑level (0.034–0.0346), so ranking
-them against each other is low confidence. If forced: `p40‑53` (3,008 runes, the most
-material and the most repeated 4‑grams) is the best place to test a new hypothesis, and
-`p54‑55` (308 runes, flattest, no repeats) the least promising.
+Among the unsolved pages the IoC differences are noise-level (0.034–0.0346), so ranking them
+against each other is low confidence. If forced: `p40-53` (3,008 runes, the most material and
+the most repeated 4-grams) is the best place to test a new hypothesis, and `p54-55`
+(308 runes, flattest, no repeats) the least promising.
 
 ---
 
-## 5. Going further: structure probes and a keystream search
+## 5. Structure probes and a number-theoretic key-stream search
 
-Section 4 showed the simple attacks fail. Two more principled approaches confirm *why*, and
-one of them doubles as a positive control that proves the pipeline is sound.
+Section 4 showed that the simple attacks fail. Two more principled approaches confirm *why*,
+and one of them doubles as a positive control demonstrating that the pipeline is sound.
 
 ### 5.1 Structure probes
 
-Beyond the single-symbol IoC, four cheap probes test for any exploitable regularity:
+Beyond the single-symbol IoC, four inexpensive probes test for any exploitable regularity:
 
-- **chi‑squared vs uniform**: is the single‑symbol distribution actually flat?
+- **chi-squared vs uniform**: is the single-symbol distribution actually flat?
 - **digraphic IoC**: do adjacent pairs repeat more than chance (ratio 1.0 = random)?
-- **autocorrelation / Kasiski**: is there a repeating period (reported as a z‑score)?
-- **zlib compressibility vs random**: is there any redundancy a compressor can find?
+- **autocorrelation / Kasiski**: is there a repeating period (reported as a z-score)?
+- **zlib compressibility vs random**: is there any redundancy a compressor can exploit?
 
 Run across the corpus, they behave like a calibrated instrument. The plaintext control page
-lights up on every probe; every unsolved page sits at the random baseline.
+responds on every probe; every unsolved page sits at the random baseline.
 
 | page | IoC | chi²z | digraphic IoC | best period (z) | compress vs random |
 |------|----:|------:|--------------:|----------------:|-------------------:|
 | *Loss of Divinity* (plaintext control) | 0.0612 | **78.1** | **5.55×** | d=37 (**z=8.0**) | **0.76×** |
-| p0‑2   | 0.0341 | −1.1 | 0.99× | d=35 (z=3.8) | 1.00× |
-| p3‑7   | 0.0346 |  0.7 | 1.03× | d=29 (z=1.9) | 1.00× |
-| p8‑14  | 0.0345 | −0.1 | 0.99× | d=24 (z=1.9) | 1.00× |
-| p15‑22 | 0.0345 |  0.1 | 1.04× | d=5  (z=2.6) | 1.00× |
-| p23‑26 | 0.0343 | −0.8 | 0.94× | d=38 (z=2.5) | 1.00× |
-| p27‑32 | 0.0342 | −1.6 | 0.97× | d=58 (z=1.9) | 1.00× |
-| p33‑39 | 0.0344 | −0.8 | 1.04× | d=6  (z=3.1) | 1.00× |
-| p40‑53 | 0.0345 |  0.7 | 1.03× | d=58 (z=1.6) | 1.00× |
-| p54‑55 | 0.0338 | −0.8 | 1.16× | d=45 (z=2.7) | 1.00× |
+| p0-2   | 0.0341 | −1.1 | 0.99× | d=35 (z=3.8) | 1.00× |
+| p3-7   | 0.0346 |  0.7 | 1.03× | d=29 (z=1.9) | 1.00× |
+| p8-14  | 0.0345 | −0.1 | 0.99× | d=24 (z=1.9) | 1.00× |
+| p15-22 | 0.0345 |  0.1 | 1.04× | d=5  (z=2.6) | 1.00× |
+| p23-26 | 0.0343 | −0.8 | 0.94× | d=38 (z=2.5) | 1.00× |
+| p27-32 | 0.0342 | −1.6 | 0.97× | d=58 (z=1.9) | 1.00× |
+| p33-39 | 0.0344 | −0.8 | 1.04× | d=6  (z=3.1) | 1.00× |
+| p40-53 | 0.0345 |  0.7 | 1.03× | d=58 (z=1.6) | 1.00× |
+| p54-55 | 0.0338 | −0.8 | 1.16× | d=45 (z=2.7) | 1.00× |
 
-The control shows digraphic IoC 5.6× random, chi² z=78, a period spike at z=8, and
+The control shows digraphic IoC 5.6× random, chi² z = 78, a period spike at z = 8, and
 compresses to 0.76×. Every unsolved page shows digraphic IoC within a few percent of 1.0×,
-chi² |z| < 2, no period above z≈4 across 60 lags (expected under multiple testing on random
-data), and zero compressibility past random. There is no monographic, digraphic, periodic,
-or redundancy structure to exploit.
+chi² |z| < 2, no period above z ≈ 4 across 60 lags (as expected under multiple testing on random
+data), and no compressibility beyond random. There is no monographic, digraphic, periodic, or
+redundancy structure to exploit.
 
-### 5.2 A number-theoretic keystream search
+### 5.2 A number-theoretic key-stream search
 
-The flat statistics point to a keystream cipher, and the solved pages reveal Cicada's taste
-for primes and totients. So the natural attack is to brute‑force a library of deterministic
-integer sequences as keystreams (mod 29), both adding and subtracting, over small offsets,
-scoring each decrypt with a rune 4‑gram model. The library: primes, φ(prime), φ(n), Möbius
-μ, divisor count τ, σ, Fibonacci, Lucas, triangular numbers, squares, Trithemius `n`, prime
-gaps, Thue‑Morse, and the digits of π.
+The flat statistics point to a key-stream cipher, and the solved pages reveal Cicada's taste
+for primes and totients. The natural attack is therefore to brute-force a library of
+deterministic integer sequences as key-streams (mod 29), both adding and subtracting, over
+small offsets, scoring each decrypt with a rune 4-gram model. The library comprises: primes,
+φ(prime), φ(n), Möbius μ, divisor count τ, σ, Fibonacci, Lucas, triangular numbers, squares,
+Trithemius `n`, prime gaps, Thue-Morse, and the digits of π.
 
 **Positive control.** The search rediscovers *An End* with no hints. `totient(primes)`,
 subtract, offset 0 gives IoC **0.0552** and the text:
@@ -326,106 +340,105 @@ subtract, offset 0 gives IoC **0.0552** and the text:
 ANENDWITHINTHEDEEPWEBTHEREEXISTSAPAGETHA...   ("AN END, WITHIN THE DEEP WEB, THERE EXISTS A PAGE THAT...")
 ```
 
-Its 4‑gram score is **−12.1** per window, cleanly separated from noise. That separation is
-what makes the negative results trustworthy.
+Its 4-gram score is **−12.1** per window, cleanly separated from noise. That separation is what
+makes the negative results trustworthy.
 
 **Against the unsolved pages: nothing.** The best candidate for every page scores around
-**−14.6** (versus *An End*'s −12.1), leaves IoC at the random ~0.034, and reads as gibberish.
+**−14.6** (versus *An End*'s −12.1), leaves IoC at the random ≈ 0.034, and reads as gibberish.
 
 | page | best stream | score | IoC | verdict |
 |------|-------------|------:|----:|---------|
 | p56_an_end (control) | totient(primes) | **−12.1** | **0.0552** | **recovered** ✓ |
-| p0‑2   | primes          | −14.6 | 0.0344 | no |
-| p3‑7   | n (Trithemius)  | −14.6 | 0.0345 | no |
-| p8‑14  | totient(primes) | −14.7 | 0.0350 | no |
-| p15‑22 | primes          | −14.7 | 0.0344 | no |
-| p23‑26 | primes          | −14.6 | 0.0343 | no |
-| p27‑32 | lucas           | −14.6 | 0.0343 | no |
-| p33‑39 | sigma(n)        | −14.6 | 0.0345 | no |
-| p40‑53 | tau(n)          | −14.7 | 0.0344 | no |
-| p54‑55 | lucas           | −14.6 | 0.0334 | no |
+| p0-2   | primes          | −14.6 | 0.0344 | no |
+| p3-7   | n (Trithemius)  | −14.6 | 0.0345 | no |
+| p8-14  | totient(primes) | −14.7 | 0.0350 | no |
+| p15-22 | primes          | −14.7 | 0.0344 | no |
+| p23-26 | primes          | −14.6 | 0.0343 | no |
+| p27-32 | lucas           | −14.6 | 0.0343 | no |
+| p33-39 | sigma(n)        | −14.6 | 0.0345 | no |
+| p40-53 | tau(n)          | −14.7 | 0.0344 | no |
+| p54-55 | lucas           | −14.6 | 0.0334 | no |
 
-None of the common number‑theoretic streams encipher these pages. Whatever keystream they
-use is either outside this (fairly complete) library, is keyed, or is combined with
-interrupters or transposition that desynchronise it. The scripts (`analysis/triage.py`,
-`analysis/keystream_search.py`) make both results reproducible, and the keystream search is
-a natural fit for GPU acceleration if the sequence library is widened.
+None of the common number-theoretic streams encipher these pages. Whatever key-stream they use
+is either outside this (fairly complete) library, is keyed, or is combined with interrupters or
+transposition that desynchronise it. The scripts (`analysis/triage.py`,
+`analysis/keystream_search.py`) make both results reproducible, and the key-stream search is a
+natural candidate for GPU acceleration if the sequence library is widened.
 
 ---
 
 ## 6. Evaluating the "27×27 totient map" solution
 
-A detailed and sincere reconstruction by GitHub user **2retooz270703**
-([Liber‑Primus‑27x27‑Map‑3‑Rune‑Nodes‑Totient‑Decryption](https://github.com/2retooz270703/Liber-Primus-27x27-Map-3-Rune-Nodes-Totient-Decryption))
-proposes that pages 0–2 (the first 729 runes = 27×27 grid) decrypt via a custom route
-(mirrored 3‑rune nodes, Euler‑totient transforms, Möbius‑function phase selection,
-coordinate selectors, a "hidden value" rule) to the text *"AS I GO, THE WEATHER TURNS COLD
-… THE IDEA OF THE END IS DEATH. SEE YOU SOON,"* supported by striking numerology. The repo
-documents the route, per‑stage plaintext, and the numerical evidence in full.
+A detailed and sincere reconstruction by GitHub user **2retooz270703** [3] proposes that pages
+0–2 (the first 729 runes = 27×27 grid) decrypt via a custom route (mirrored 3-rune nodes,
+Euler-totient transforms, Möbius-function phase selection, coordinate selectors, and a "hidden
+value" rule) to the text *"AS I GO, THE WEATHER TURNS COLD … THE IDEA OF THE END IS DEATH.
+SEE YOU SOON,"* supported by striking numerology. The repository documents the route, the
+per-stage plaintext, and the numerical evidence in full.
 
-I checked the numbers independently. **They are all correct:**
+We verified the numerical claims independently. **Each holds:**
 
 | claim | verified |
 |-------|:--------:|
-| "AS I GO THE WEATHER TURNS COLD" = 21 runes, index‑sum 233 | ✅ |
-| COLD = 51 (0‑based indices) | ✅ |
+| "AS I GO THE WEATHER TURNS COLD" = 21 runes, index-sum 233 | ✅ |
+| COLD = 51 (0-based indices) | ✅ |
 | 233 is the 51st prime | ✅ |
 | Fibonacci F₇ = 13, F₁₃ = 233 | ✅ |
 | φ(233) = 232 (the next block's sum) | ✅ |
 | 2163 = 3 × 7 × 103 = U · O · Y (prime values) → "YOU" | ✅ |
 
-So the arithmetic is real. **But correct arithmetic is not a verified decryption**, for
-three concrete reasons:
+So the arithmetic is real. **But correct arithmetic is not a verified decryption,** for three
+concrete reasons.
 
-1. **Degrees of freedom.** The method has many tunable choices: route selection through
-   the grid, which 3‑rune nodes to use, mirrored vs non‑mirrored, phase selection,
-   coordinate selectors, state roles, a "hidden value" rule. Combined with the Gematria
-   ambiguity (U/V, C/K, S/Z, and digraph‑vs‑two‑letters), a system with this much freedom
-   can be *steered* toward a pre‑chosen sentence. The more free parameters a "solution" has,
-   the less any single output means.
-2. **Post‑hoc numerology.** The relationships were found *after* fixing the plaintext.
-   Across primes, totients, Fibonacci numbers, indices, and factorizations, the space of
-   "striking" coincidences is enormous, so finding several for a short chosen phrase is
-   expected by chance (apophenia). The author even notes the Y·O·U product "does not
-   determine letter order."
-3. **It doesn't match how the genuine pages work.** Every confirmed solve uses *one simple,
-   deterministic* cipher with unambiguous output, reproducible by anyone in a single step,
-   and Cicada built in hard verification (e.g. *An End* literally hashes to a specific
-   value). A real solution of 0–2 would be similarly clean and independently checkable.
+1. **Degrees of freedom.** The method has many tunable choices: route selection through the
+   grid, which 3-rune nodes to use, mirrored vs non-mirrored, phase selection, coordinate
+   selectors, state roles, and a "hidden value" rule. Combined with the Gematria ambiguity
+   (U/V, C/K, S/Z, and digraph-vs-two-letters), a system with this much freedom can be *steered*
+   toward a pre-chosen sentence. The more free parameters a "solution" has, the less any single
+   output means.
+2. **Post-hoc numerology.** The relationships were found *after* fixing the plaintext. Across
+   primes, totients, Fibonacci numbers, indices, and factorizations, the space of "striking"
+   coincidences is enormous, so finding several for a short chosen phrase is expected by chance
+   (apophenia). The author even notes that the Y·O·U product "does not determine letter order."
+3. **It does not match how the genuine pages work.** Every confirmed solve uses *one simple,
+   deterministic* cipher with unambiguous output, reproducible by anyone in a single step, and
+   Cicada built in hard verification (e.g. *An End* literally hashes to a specific value). A
+   real solution of pages 0–2 would be similarly clean and independently checkable.
 
-None of this means the author was dishonest. The work is careful, and the structure (e.g.
-21 = 3 × 7 = the central rune NG; 27 = 3³ and 343 = 7³ in the final blocks) is genuinely
-elegant. It means the evidence offered is not the *kind* of evidence that settles a cipher.
+This assessment concerns the evidentiary standard of the proposal, not the sincerity or care of
+its author. The work is careful, and the structure (e.g. 21 = 3 × 7 = the central rune NG;
+27 = 3³ and 343 = 7³ in the final blocks) is genuinely elegant. The point is that the evidence
+offered is not the *kind* of evidence that settles a cipher.
 
-### What would actually verify it
+### 6.1 What would actually verify it
 
-- A **deterministic, parameter‑free** procedure mapping the exact 729 ciphertext runes to
-  the plaintext, reproducible by an independent implementation.
-- A **null‑hypothesis control**: the same ruleset yields English from the real ciphertext
-  but *not* from shuffled/random runes of identical statistics. If it can produce English
-  from anything, it proves nothing.
-- An **independently checkable artifact**: a valid hash/onion like the real pages, or
-  correctly solving a *different* unsolved page that then matches a known Cicada value.
+- A **deterministic, parameter-free** procedure mapping the exact 729 ciphertext runes to the
+  plaintext, reproducible by an independent implementation.
+- A **null-hypothesis control**: the same ruleset yields English from the real ciphertext but
+  *not* from shuffled/random runes of identical statistics. A procedure that can produce English
+  from anything proves nothing.
+- An **independently checkable artifact**: a valid hash/onion like the real pages, or correctly
+  solving a *different* unsolved page that then matches a known Cicada value.
 
-Until one of those holds, it is best described as an elegant *hypothesis*, not a solve.
+Until one of those holds, the proposal is best described as an elegant *hypothesis*, not a solve.
 
 ---
 
-## 7. Lessons
+## 7. Discussion
 
-- **Measure before you attack.** IoC tells you in milliseconds whether a page is even in
-  reach of your method. Most of the unsolved Liber Primus is not.
-- **Validate on known answers.** A search tool is only trustworthy if it recovers a plaintext
-  you planted. Ours does; many "solvers" are never tested this way.
+- **Measure before you attack.** The IoC indicates in milliseconds whether a page is even within
+  reach of a given method. Most of the unsolved *Liber Primus* is not.
+- **Validate on known answers.** A search tool is trustworthy only if it recovers a plaintext
+  that was deliberately planted. Ours does; many proposed "solvers" are never tested this way.
 - **Numerology is not cryptanalysis.** A rich symbol system will always yield striking
-  coincidences for any short text. Proof comes from *constraint and reproducibility*, not
-  from the number of patterns you can find after the fact.
-- **The honest negative result is a result.** "These pages are statistically flat and resist
-  this entire class of attack" is more useful, and more truthful, than a forced reading.
+  coincidences for any short text. Proof comes from *constraint and reproducibility*, not from
+  the number of patterns one can find after the fact.
+- **An honest negative result is a result.** "These pages are statistically flat and resist this
+  entire class of attack" is more useful, and more truthful, than a forced reading.
 
 ---
 
-## 8. Reproduce it yourself
+## 8. Reproducibility
 
 ```bash
 cd AZdecrypt/Source/cicada
@@ -447,15 +460,30 @@ python3 analysis/difficulty.py        # difficulty ranking by IoC
 python3 analysis/charts.py            # regenerate the figures
 ```
 
-## Credits
+---
 
-Rune transcriptions and rune n‑gram corpus from the community project
-[relikd/LiberPrayground](https://github.com/relikd/LiberPrayground). Gematria table and
-cipher mechanics from community research (the uncovering‑cicada wiki and boxentriq's guide).
-The audited 27×27 proposal is the work of GitHub user **2retooz270703**, published at
-[Liber‑Primus‑27x27‑Map‑3‑Rune‑Nodes‑Totient‑Decryption](https://github.com/2retooz270703/Liber-Primus-27x27-Map-3-Rune-Nodes-Totient-Decryption)
-(credit to them for the detailed writeup and the interactive route map). This post evaluates
-its *evidentiary standard*, not the sincerity of its author.
+## Acknowledgements
 
-*This toolkit lives in a fork of Jarl Van Eycke's AZdecrypt; the same repo also contains a
-CUDA/GPU port of the AZdecrypt homophonic solver.*
+Rune transcriptions and the rune n-gram corpus are drawn from the community project
+*LiberPrayground* [2]. The Gematria table and cipher mechanics follow community research
+[5, 6]. The audited 27×27 proposal is the work of GitHub user 2retooz270703 [3]; we thank the
+author for the detailed writeup and the interactive route map. This toolkit lives in a fork of
+Jarl Van Eycke's AZdecrypt [4]; the same repository also contains a CUDA/GPU port of the
+AZdecrypt homophonic solver.
+
+## References
+
+[1] W. F. Friedman, *The Index of Coincidence and Its Applications in Cryptography*, Riverbank
+Publication No. 22, Riverbank Laboratories, 1922.
+
+[2] relikd, *LiberPrayground*, GitHub repository.
+<https://github.com/relikd/LiberPrayground>
+
+[3] 2retooz270703, *Liber-Primus-27x27-Map-3-Rune-Nodes-Totient-Decryption*, GitHub repository.
+<https://github.com/2retooz270703/Liber-Primus-27x27-Map-3-Rune-Nodes-Totient-Decryption>
+
+[4] J. Van Eycke, *AZdecrypt*, homophonic-substitution cipher solver.
+
+[5] *Uncovering Cicada* wiki, Gematria Primus and solved-page documentation.
+
+[6] *Boxentriq*, guide to the Cicada 3301 ciphers and the Gematria Primus.
