@@ -1,6 +1,6 @@
 # Reproducing and stress‑testing Liber Primus decryptions
 
-*A small toolkit, the pages it can and cannot read, and a skeptic's audit of a popular "solution."*
+*A small toolkit, the pages it can and cannot read, and an evidence-based review of a popular "solution."*
 
 ---
 
@@ -353,7 +353,7 @@ a natural fit for GPU acceleration if the sequence library is widened.
 
 ---
 
-## 6. A skeptic's audit of the "27×27 totient map" solution
+## 6. Evaluating the "27×27 totient map" solution
 
 A detailed and sincere reconstruction by GitHub user **2retooz270703**
 ([Liber‑Primus‑27x27‑Map‑3‑Rune‑Nodes‑Totient‑Decryption](https://github.com/2retooz270703/Liber-Primus-27x27-Map-3-Rune-Nodes-Totient-Decryption))
