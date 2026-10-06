@@ -184,11 +184,13 @@ cannot break, and exactly why no one has broken them.
 
 ## 5. A skeptic's audit of the "27×27 totient map" solution
 
-A detailed and sincere reconstruction circulating online proposes that pages 0–2 (the first
-729 runes = 27×27 grid) decrypt via a custom route (mirrored 3‑rune nodes, Euler‑totient
-transforms, Möbius‑function phase selection, coordinate selectors, a "hidden value" rule)
-to the text *"AS I GO, THE WEATHER TURNS COLD … THE IDEA OF THE END IS DEATH. SEE YOU
-SOON,"* supported by striking numerology.
+A detailed and sincere reconstruction by GitHub user **2retooz270703**
+([Liber‑Primus‑27x27‑Map‑3‑Rune‑Nodes‑Totient‑Decryption](https://github.com/2retooz270703/Liber-Primus-27x27-Map-3-Rune-Nodes-Totient-Decryption))
+proposes that pages 0–2 (the first 729 runes = 27×27 grid) decrypt via a custom route
+(mirrored 3‑rune nodes, Euler‑totient transforms, Möbius‑function phase selection,
+coordinate selectors, a "hidden value" rule) to the text *"AS I GO, THE WEATHER TURNS COLD
+… THE IDEA OF THE END IS DEATH. SEE YOU SOON,"* supported by striking numerology. The repo
+documents the route, per‑stage plaintext, and the numerical evidence in full.
 
 I checked the numbers independently. **They are all correct:**
 
@@ -272,8 +274,10 @@ done
 Rune transcriptions and rune n‑gram corpus from the community project
 [relikd/LiberPrayground](https://github.com/relikd/LiberPrayground). Gematria table and
 cipher mechanics from community research (the uncovering‑cicada wiki and boxentriq's guide).
-The audited 27×27 proposal is a published community reconstruction; this post evaluates its
-*evidentiary standard*, not the sincerity of its author.
+The audited 27×27 proposal is the work of GitHub user **2retooz270703**, published at
+[Liber‑Primus‑27x27‑Map‑3‑Rune‑Nodes‑Totient‑Decryption](https://github.com/2retooz270703/Liber-Primus-27x27-Map-3-Rune-Nodes-Totient-Decryption)
+(credit to them for the detailed writeup and the interactive route map). This post evaluates
+its *evidentiary standard*, not the sincerity of its author.
 
 *This toolkit lives in a fork of Jarl Van Eycke's AZdecrypt; the same repo also contains a
 CUDA/GPU port of the AZdecrypt homophonic solver.*
