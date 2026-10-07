@@ -9,6 +9,8 @@ Reproduce the figures and tables in [`../RESEARCH.md`](../RESEARCH.md).
 - `keystream_search.py` number-theoretic keystream search, with An End as a positive control.
 - `deep_probes.py` further cipher-class probes: periodic (Friedman) IoC, isomorph test,
   unigram chi-squared vs English, bigram distribution, and entropy.
+- `identify.py` identifies the unsolved cipher *family* by enciphering known English runes
+  under each candidate cipher and matching the fingerprint to the observed pages.
 
 ```
 python3 frequency.py
@@ -17,4 +19,5 @@ python3 charts.py
 python3 triage.py
 python3 keystream_search.py
 python3 deep_probes.py
+python3 identify.py
 ```

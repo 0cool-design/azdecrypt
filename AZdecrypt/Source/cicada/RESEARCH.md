@@ -22,7 +22,10 @@ search rediscovers the solved *An End* page as a positive control but yields not
 unsolved corpus. Further probes for repeating keys, homophonic substitution, and transposition
 are likewise negative; the sole departure from randomness is a pronounced suppression of
 doublets (adjacent identical runes occur at 0.66% against an expected 3.45%), which we confirm
-independently and discuss as the one genuine structural handle on the corpus. Finally, we evaluate a widely circulated "27×27 totient map" proposal and
+independently and discuss as the one genuine structural handle on the corpus. Fingerprint
+matching against simulated ciphers identifies the family as a non-repeating additive key-stream
+carrying an anti-doublet property, and excludes monoalphabetic substitution, repeating-key
+Vigenère, pure transposition, and English running keys. Finally, we evaluate a widely circulated "27×27 totient map" proposal and
 find that although its arithmetic is correct, it does not meet the evidentiary standard
 required to verify a decryption. All results are reproducible from the commands in Section 8.
 
@@ -483,6 +486,63 @@ engineered to be doublet-free. Any future attack should treat doublet-freeness a
 constraint that the true solution must satisfy, and as the most promising place to
 reverse-engineer the generating rule.
 
+### 5.5 Which cipher family fits the fingerprint?
+
+The nine unsolved page-groups share a single fingerprint across Sections 4–5.4 (IoC ≈ 0.0343,
+doublets ≈ 0.7%, no period, independent neighbours), so they are almost certainly enciphered
+by one scheme. To *identify its family* we encipher known English runes — the pooled solved
+corpus — under each candidate cipher and compare the resulting fingerprint to the observed one
+(`analysis/identify.py`). The family that matches on every axis, including the anomalous
+doublet suppression, is the identification.
+
+| cipher family (applied to English runes) | IoC | doublet % | periodic IoC | bigram dep. z |
+|-------------------------------------------|----:|----------:|-------------:|--------------:|
+| plaintext / monoalphabetic substitution | 0.0614 | 2.62 | 0.0624 | 81.0 |
+| Vigenère (repeating key, period 10) | 0.0374 | 3.39 | **0.0613** | 18.2 |
+| running key (English + English) | 0.0359 | 3.63 | 0.0383 | 0.4 |
+| number stream, φ(prime) (the *An End* cipher) | 0.0345 | 3.12 | 0.0357 | 1.3 |
+| one-time pad (uniform key) | 0.0345 | 3.55 | 0.0354 | −0.1 |
+| **stream + anti-doublet rule** | 0.0345 | **0.00** | 0.0355 | 2.6 |
+| **unsolved pages (observed)** | **0.0343** | **0.71** | **0.0370** | **0.6** |
+
+Reading the table top to bottom eliminates the families one at a time:
+
+- **Monoalphabetic substitution** leaves every English statistic intact — IoC 0.061, doublets
+  2.6%, strong neighbour coupling (z = 81) — because relabelling symbols changes none of them.
+  The observed pages show none of this; monoalphabetic ciphers were already excluded in Section
+  4 and are confirmed excluded here.
+- **A repeating-key Vigenère** flattens the overall IoC but betrays itself in the *periodic*
+  IoC (0.061 — a sharp column-IoC spike at the key length) and in residual neighbour coupling
+  (z = 18). The observed periodic IoC is flat (0.037), so there is no repeating key, consistent
+  with Section 5.3.
+- **A running key built from a second English text** sits slightly *above* the random floor
+  (IoC 0.0359), because summing two lumpy English distributions is not perfectly flat, and it
+  does not suppress doublets (3.6%). The observed IoC sits right *on* the floor (0.0343), which
+  disfavours an English running key and points to a near-uniform key-stream.
+- **The vanilla additive streams** — the number-theoretic φ(prime) stream that solved *An End*,
+  and a uniform one-time pad — match the observed pages on IoC, periodicity, and neighbour
+  independence almost perfectly. They fail on exactly one axis: they leave doublets at the
+  chance rate (3.1–3.6%), whereas the real pages suppress them to 0.7%.
+- **Only an additive stream combined with a rule that forbids equal adjacent symbols**
+  reproduces all four numbers at once, including the doublet suppression.
+
+**Identification.** The unsolved pages are best identified as a **non-repeating additive
+key-stream cipher over the 29 runes** — the same broad family as the solved *An End* page, and
+unlike the monoalphabetic / periodic ciphers of the other solved pages — carrying one extra,
+deliberate property: **adjacent ciphertext runes are almost never equal.** Every measurement in
+this study is consistent with a keyed or number-theoretic stream whose construction excludes (or
+heavily penalises) equal neighbours; the anti-doublet behaviour is the single feature that
+separates these pages from a textbook stream cipher. The pages are *not* a simple substitution,
+a repeating-key Vigenère, a pure transposition, or an English running key.
+
+Two honest caveats. First, the synthetic anti-doublet model drives doublets to 0.00%, while the
+real pages retain 0.7%; the true suppression is therefore strong but not absolute, suggesting
+the anti-doublet property is a *by-product of the construction* (or a rule acting on the
+plaintext or key) rather than a hard filter on the output. Second, this identifies the cipher
+*family and a structural constraint, not the key or the plaintext*. Fingerprint matching narrows
+the search space and names the mechanism to reverse-engineer; it does not, by itself, read the
+pages.
+
 ---
 
 ## 6. Evaluating the "27×27 totient map" solution
@@ -574,6 +634,7 @@ done
 python3 analysis/triage.py            # structure probes
 python3 analysis/keystream_search.py  # number-theoretic keystream search (+ An End control)
 python3 analysis/deep_probes.py       # periodic IoC, isomorph, transposition, bigram, entropy
+python3 analysis/identify.py          # cipher-family identification by fingerprint matching
 python3 analysis/frequency.py         # solved-corpus letter/word frequencies
 python3 analysis/difficulty.py        # difficulty ranking by IoC
 python3 analysis/charts.py            # regenerate the figures
