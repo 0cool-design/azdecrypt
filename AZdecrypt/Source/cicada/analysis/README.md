@@ -7,6 +7,8 @@ Reproduce the figures and tables in [`../RESEARCH.md`](../RESEARCH.md).
 - `charts.py` renders the PNG histograms into `../assets/` (needs matplotlib).
 - `triage.py` structure probes (chi-squared, digraphic IoC, autocorrelation, compression).
 - `keystream_search.py` number-theoretic keystream search, with An End as a positive control.
+- `deep_probes.py` further cipher-class probes: periodic (Friedman) IoC, isomorph test,
+  unigram chi-squared vs English, bigram distribution, and entropy.
 
 ```
 python3 frequency.py
@@ -14,4 +16,5 @@ python3 difficulty.py
 python3 charts.py
 python3 triage.py
 python3 keystream_search.py
+python3 deep_probes.py
 ```

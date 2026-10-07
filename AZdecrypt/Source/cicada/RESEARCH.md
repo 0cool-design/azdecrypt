@@ -19,7 +19,10 @@ probes that these pages are statistically indistinguishable from uniform noise o
 symbols (IoC ≈ 0.034). This observation excludes the entire class of monoalphabetic and
 periodic-polyalphabetic attacks that broke the easy pages. A number-theoretic key-stream
 search rediscovers the solved *An End* page as a positive control but yields nothing on the
-unsolved corpus. Finally, we evaluate a widely circulated "27×27 totient map" proposal and
+unsolved corpus. Further probes for repeating keys, homophonic substitution, and transposition
+are likewise negative; the sole departure from randomness is a pronounced suppression of
+doublets (adjacent identical runes occur at 0.66% against an expected 3.45%), which we confirm
+independently and discuss as the one genuine structural handle on the corpus. Finally, we evaluate a widely circulated "27×27 totient map" proposal and
 find that although its arithmetic is correct, it does not meet the evidentiary standard
 required to verify a decryption. All results are reproducible from the commands in Section 8.
 
@@ -365,6 +368,121 @@ transposition that desynchronise it. The scripts (`analysis/triage.py`,
 `analysis/keystream_search.py`) make both results reproducible, and the key-stream search is a
 natural candidate for GPU acceleration if the sequence library is widened.
 
+### 5.3 Ruling out three further cipher classes
+
+Sections 4–5.2 eliminate monoalphabetic ciphers, short-period Vigenère, and the common
+number-theoretic key-streams. Three cipher classes remain worth testing explicitly — a
+**repeating key of any period**, **homophonic substitution**, and **pure transposition** —
+alongside a direct look at the **bigram distribution** and a calibrated **entropy** figure.
+The script `analysis/deep_probes.py` runs all of them, again calibrated against the plaintext
+control (*Loss of Divinity*) and the solved key-stream page (*An End*).
+
+| page | runes | periodic IoC (best d) | isomorph z | χ² vs English (z) | bigram dep. (z) | H₁ | H₂cond |
+|------|------:|----------------------:|-----------:|------------------:|----------------:|-----:|------:|
+| *Loss of Divinity* (plaintext control) | 755 | **0.0667** (d=39) | −1.2 | **1.4** | **18.4** | 4.26 | **3.11** |
+| p56 *An End* (key-stream control) | 85 | 0.0529 (d=20) | −0.0 | 101 | 1.4 | 4.66 | 1.56 |
+| p0-2   | 729  | 0.0374 (d=35) | −3.2 | 799  | 0.3  | 4.84 | 3.93 |
+| p3-7   | 1145 | 0.0375 (d=23) | −3.0 | 1967 | 0.5  | 4.84 | 4.24 |
+| p8-14  | 1729 | 0.0366 (d=24) | −4.8 | 2307 | 0.1  | 4.85 | 4.47 |
+| p15-22 | 1903 | 0.0365 (d=40) | −2.7 | 2617 | 1.7  | 4.85 | 4.48 |
+| p23-26 | 1021 | 0.0360 (d=24) | −2.6 | 968  | −1.5 | 4.84 | 4.24 |
+| p27-32 | 1433 | 0.0364 (d=30) | −3.4 | 1916 | −0.4 | 4.85 | 4.40 |
+| p33-39 | 1680 | 0.0355 (d=32) | −2.8 | 2294 | 1.7  | 4.85 | 4.43 |
+| p40-53 | 3008 | 0.0355 (d=29) | −4.6 | 4686 | 1.9  | 4.85 | 4.62 |
+| p54-55 | 308  | 0.0419 (d=26) | −1.9 | 392  | 1.1  | 4.80 | 3.08 |
+
+**Periodic (Friedman) IoC.** A repeating key of length `d` makes every `d`-th symbol share
+one alphabet, so slicing the text into `d` columns and averaging the per-column IoC peaks
+sharply at the true period (each column becomes monoalphabetic, IoC → English level ≈ 0.06),
+while random text stays at 1/29. Swept over `d` = 1…40, no unsolved page rises meaningfully
+above the floor: the best column-IoC any of them reaches is 0.036–0.042, versus the plaintext
+control's 0.0667. (The highest, p54-55's 0.0419, and the control's peak landing at d=39 rather
+than d=1, are both small-column sampling noise over short texts, not real periods.) There is
+no repeating key of period ≤ 40.
+
+**Isomorph test (homophonic substitution).** A repeated plaintext substring that contains a
+repeated letter leaves a repeated *first-occurrence pattern* — an isomorph such as `ABCCBA` —
+and under a periodic or naively homophonic cipher that pattern can survive into the
+ciphertext. We count non-trivial repeated isomorphs (length 6) and compare to the mean over
+200 random shuffles of the same symbols. No page shows isomorph excess above chance; the
+larger pages fall slightly *below* their own shuffle (−3 to −5 σ), consistent with a stream
+that suppresses short repeats rather than a homophonic cipher that would create them. The
+plaintext control, at 755 runes, is itself too short to register a positive isomorph signal,
+so this probe is read as confirming the *absence* of a strong repeated-sequence signature, not
+as a sensitive English detector.
+
+**Unigram χ² vs English.** Transposition reorders positions but never changes symbol
+identities, so a transposed English page keeps English's rune distribution. Scoring each
+page's unigram distribution against the solved-corpus English-rune profile, the plaintext
+control lands at χ² z = **1.4** (statistically indistinguishable from English, exactly as it
+should) while the unsolved pages score z = 800–4700 (wildly unlike English). Together with
+their flat IoC this rules out pure transposition and plaintext: the symbol *frequencies
+themselves* have been flattened, which only a polyalphabetic / key-stream step does.
+
+**Bigram distribution.** The solved corpus's most common digraphs are the English ones —
+`OU, THE, ER, RE, ST, IS, AN, IN` — and the plaintext control is dominated by `BE, WE, ER, RE,
+THE`. The unsolved pages show no such structure: their top bigrams are low-count and arbitrary
+(p0-2: `ITH, HB, YH, CF`; p40-53's most frequent pair `FA` occurs just 13 times in 3,008
+runes, barely above the ≈ 10 expected by chance). Quantified as a χ² dependence score —
+observed adjacent-pair counts against the independence model `n_a·n_b/N` — the plaintext
+control registers z = **18.4** (strong neighbour coupling) while every unsolved page sits at
+z ≈ 0 (−1.5 to +1.9). Adjacent runes are statistically independent; there is no digraph
+structure to exploit.
+
+**Entropy.** As a single calibrated number: unigram entropy H₁ is 4.84–4.85 bits on every
+unsolved page, essentially the 29-symbol maximum of **4.858**, and the conditional entropy
+H₂ (the surprise in each rune given its predecessor) stays high. The contrast with English is
+clearest at matched length: *Loss of Divinity* (755 runes) has H₂ = **3.11** bits, whereas
+p0-2 (729 runes) has **3.93** — the plaintext is markedly more predictable. (Conditional-entropy
+estimates are biased downward at small `N`, so they are compared only within similar lengths.)
+The unsolved pages carry close to the maximum possible information per symbol; no redundancy
+remains for an attack to grip.
+
+**Verdict.** Across all three cipher classes the result matches Sections 4–5.2: the plaintext
+control lights up on every probe, and every unsolved page sits at the random / independent
+baseline — with a single, striking exception developed in Section 5.4. The remaining cipher
+must flatten the unigram distribution, leave no period ≤ 40, create no homophonic isomorphs,
+and decouple neighbours — i.e. a **non-repeating key-stream** (running key, autokey, or a
+longer construction), possibly combined with transposition or interrupters. That is exactly
+the class Section 4 predicted, and exactly the class no public attack has broken.
+
+### 5.4 The one non-flat signal: doublet suppression
+
+Every probe so far returns "random." There is exactly one exception, long noted by the
+CicadaSolvers community and documented on the *Uncovering Cicada* wiki [7], and
+`deep_probes.py` reproduces it precisely: **adjacent identical runes (doublets) are strongly
+suppressed.** Pooled across the nine unsolved page-groups (12,956 runes, with adjacency broken
+between groups), doublets occur **86 times where 446 are expected** by chance — **0.66% against
+3.45%**, a **17σ** deficit:
+
+| | runes | doublets | rate | expected | binomial z |
+|---|------:|---------:|-----:|---------:|-----------:|
+| unsolved corpus (pooled) | 12,956 | 86 | 0.66% | 3.45% (446) | **−17.4** |
+
+The effect holds on every individual page (per-page binomial z from −2.4 to −8.6; none near
+zero), so it is not an artefact of one section. These figures match the community's reported
+values exactly (86 observed, 446 expected), an independent confirmation from a separate
+codebase.
+
+Two further observations sharpen it. First, the suppression runs *below* the random baseline,
+not merely below English: ordinary English has a doublet rate around 3–4% (LL, SS, EE, OO …),
+and a monoalphabetic substitution would preserve that, so the 0.66% rate excludes simple
+substitution on its own and points to a step that actively forbids equal neighbours. Second,
+the nonzero first-differences are flat: the gap (runeᵢ₊₁ − runeᵢ) mod 29 is uniform over
+1…28 (delta-χ² z ≈ 0 on every unsolved page, versus 13.5 on the plaintext control). In words,
+*each rune is drawn almost uniformly from the 28 values that are not its predecessor.* This is
+also precisely the mechanism behind the negative isomorph scores in Section 5.3: a process that
+avoids length-2 repeats also yields slightly fewer short repeated patterns than a blind shuffle.
+
+What does it buy an attacker? On its own, no decryption — it yields neither plaintext nor key.
+But it is the single genuine structural handle in the corpus, and it constrains the cipher's
+construction: the ciphertext behaves like a sequence in which no symbol may equal the one
+before it. That is the natural output of, for example, a running-key / stream cipher over a
+plaintext that itself rarely doubles, or a construction (route, interrupter, or modular rule)
+engineered to be doublet-free. Any future attack should treat doublet-freeness as a hard
+constraint that the true solution must satisfy, and as the most promising place to
+reverse-engineer the generating rule.
+
 ---
 
 ## 6. Evaluating the "27×27 totient map" solution
@@ -455,6 +573,7 @@ done
 # the modern probes (Section 5)
 python3 analysis/triage.py            # structure probes
 python3 analysis/keystream_search.py  # number-theoretic keystream search (+ An End control)
+python3 analysis/deep_probes.py       # periodic IoC, isomorph, transposition, bigram, entropy
 python3 analysis/frequency.py         # solved-corpus letter/word frequencies
 python3 analysis/difficulty.py        # difficulty ranking by IoC
 python3 analysis/charts.py            # regenerate the figures
@@ -487,3 +606,6 @@ Publication No. 22, Riverbank Laboratories, 1922.
 [5] *Uncovering Cicada* wiki, Gematria Primus and solved-page documentation.
 
 [6] *Boxentriq*, guide to the Cicada 3301 ciphers and the Gematria Primus.
+
+[7] *Uncovering Cicada* wiki, *Frequency Analysis — Unsolved Pages*.
+<https://uncovering-cicada.fandom.com/wiki/Frequency_Analysis_Unsolved_Pages>
