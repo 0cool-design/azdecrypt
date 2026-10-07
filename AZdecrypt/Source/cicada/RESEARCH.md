@@ -403,6 +403,8 @@ control's 0.0667. (The highest, p54-55's 0.0419, and the control's peak landing 
 than d=1, are both small-column sampling noise over short texts, not real periods.) There is
 no repeating key of period ≤ 40.
 
+![Friedman periodic-IoC test: a simulated repeating key spikes at its period and harmonics, the plaintext control rides high everywhere, and the unsolved pages stay pinned to the random floor](assets/periodic_ioc.png)
+
 **Isomorph test (homophonic substitution).** A repeated plaintext substring that contains a
 repeated letter leaves a repeated *first-occurrence pattern* — an isomorph such as `ABCCBA` —
 and under a periodic or naively homophonic cipher that pattern can survive into the
@@ -467,6 +469,17 @@ zero), so it is not an artefact of one section. These figures match the communit
 values exactly (86 observed, 446 expected), an independent confirmation from a separate
 codebase.
 
+![Doublet rate per page: every unsolved page sits far below the 3.45% chance line, while the plaintext control and the additive An End page do not](assets/doublets.png)
+
+The same signal is visible as a map. The adjacent-pair (bigram) heatmaps below put the plaintext
+control beside the pooled unsolved corpus: English concentrates probability on a handful of
+digraphs (the bright `THE`, `ER`, `E`-row cells), whereas the unsolved corpus is a uniform
+field — with one exception, a **dark diagonal**. The diagonal is exactly the doublet cells
+(first rune = second rune); its darkness against the otherwise flat field is the 0.66% doublet
+suppression rendered visually.
+
+![Bigram heatmaps: the plaintext control lights specific English digraphs; the pooled unsolved corpus is uniform except for a suppressed (dark) diagonal](assets/bigram_heatmap.png)
+
 Two further observations sharpen it. First, the suppression runs *below* the random baseline,
 not merely below English: ordinary English has a doublet rate around 3–4% (LL, SS, EE, OO …),
 and a monoalphabetic substitution would preserve that, so the 0.66% rate excludes simple
@@ -505,7 +518,10 @@ doublet suppression, is the identification.
 | **stream + anti-doublet rule** | 0.0345 | **0.00** | 0.0355 | 2.6 |
 | **unsolved pages (observed)** | **0.0343** | **0.71** | **0.0370** | **0.6** |
 
-Reading the table top to bottom eliminates the families one at a time:
+![Cipher-family fingerprint heatmap: green cells are close to the observed value, red far. Only the anti-doublet stream matches the observed row on all four axes — every other family turns red on at least one, and on the doublet column in particular](assets/fingerprint.png)
+
+Reading the table (and the heatmap above, where red marks a mismatch) top to bottom eliminates
+the families one at a time:
 
 - **Monoalphabetic substitution** leaves every English statistic intact — IoC 0.061, doublets
   2.6%, strong neighbour coupling (z = 81) — because relabelling symbols changes none of them.
@@ -690,7 +706,8 @@ python3 analysis/identify.py          # cipher-family identification by fingerpr
 python3 analysis/antidoublet.py       # anti-doublet layer: non-additivity + de-chaining stream
 python3 analysis/frequency.py         # solved-corpus letter/word frequencies
 python3 analysis/difficulty.py        # difficulty ranking by IoC
-python3 analysis/charts.py            # regenerate the figures
+python3 analysis/charts.py            # regenerate the solved-corpus + difficulty figures
+python3 analysis/charts_probes.py     # doublets, bigram heatmap, fingerprint, periodic-IoC figures
 ```
 
 ---
