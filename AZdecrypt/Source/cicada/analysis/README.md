@@ -11,6 +11,8 @@ Reproduce the figures and tables in [`../RESEARCH.md`](../RESEARCH.md).
   unigram chi-squared vs English, bigram distribution, and entropy.
 - `identify.py` identifies the unsolved cipher *family* by enciphering known English runes
   under each candidate cipher and matching the fingerprint to the observed pages.
+- `antidoublet.py` shows the doublet suppression is non-additive (An End, an additive stream,
+  does not suppress) and that the increment/de-chaining stream is still flat.
 
 ```
 python3 frequency.py
@@ -20,4 +22,5 @@ python3 triage.py
 python3 keystream_search.py
 python3 deep_probes.py
 python3 identify.py
+python3 antidoublet.py
 ```

@@ -543,6 +543,58 @@ plaintext or key) rather than a hard filter on the output. Second, this identifi
 the search space and names the mechanism to reverse-engineer; it does not, by itself, read the
 pages.
 
+### 5.6 Underneath the anti-doublet layer
+
+Section 5.5 fit the pages to an additive key-stream *plus* an anti-doublet rule. Two
+follow-up tests (`analysis/antidoublet.py`) sharpen that picture and show why the rule is the
+part that matters.
+
+**The suppression is genuinely non-additive.** An additive stream C = P + K (mod 29) produces
+a doublet exactly when Pᵢ − Pᵢ₋₁ = Kᵢ₋₁ − Kᵢ, which for any ordinary key happens at about the
+chance rate. An additive cipher should therefore leave doublets near 3.45%, and measurement
+confirms it: English plaintext doubles at 2.62%, a simulated totient stream at 3.12%, and —
+decisively — the real solved *An End* page, which *is* an additive totient stream, at
+**2.38%**. None is suppressed. The unsolved pages' 0.66% cannot come from the additive step
+alone; it is a separate, non-additive layer that *An End does not have*. The unsolved cipher is
+thus strictly more than the *An End* construction: it shares the flat key-stream statistics but
+adds a repeat-avoiding mechanism on top. (This refines Section 5.5, where the "additive stream"
+families all reproduced the flat statistics yet none reproduced the doublet suppression.)
+
+**But inverting that layer exposes nothing.** A doublet-free sequence is a first-order chain
+over 29 symbols that never repeats; its natural inversion is the increment, or "de-chaining,"
+stream rᵢ = (Cᵢ − Cᵢ₋₁) mod 29. If the plaintext were a single de-chaining step away, r would
+carry its structure.
+
+| page | doublet % | r: IoC | r: H₁ | r: bigram dep. z |
+|------|----------:|-------:|------:|-----------------:|
+| *Loss of Divinity* (plaintext control) | 2.39 | 0.0392 | 4.73 | **17.9** |
+| p56 *An End* | 2.38 | 0.0304 | 4.69 | −1.1 |
+| p0-2   | 0.55 | 0.0354 | 4.80 | −1.4 |
+| p3-7   | 0.52 | 0.0357 | 4.80 | 2.2 |
+| p8-14  | 0.52 | 0.0355 | 4.82 | 1.6 |
+| p15-22 | 0.53 | 0.0354 | 4.82 | 1.3 |
+| p23-26 | 1.08 | 0.0348 | 4.83 | 0.3 |
+| p27-32 | 0.91 | 0.0354 | 4.82 | −1.8 |
+| p33-39 | 0.71 | 0.0354 | 4.82 | −0.2 |
+| p40-53 | 0.60 | 0.0355 | 4.82 | −1.4 |
+| p54-55 | 0.98 | 0.0373 | 4.73 | −0.5 |
+
+Across every unsolved page the increment stream is flat: IoC ≈ 0.0354 (the random floor),
+entropy H₁ ≈ 4.81 bits against the 4.858 maximum, and bigram-dependence z ≈ 0. The probe is
+calibrated — the plaintext control's increment stream still registers strong coupling (z =
+**17.9**), exactly the signal a near-plaintext page would show — and the unsolved pages show
+none of it.
+
+**What this means.** The anti-doublet behaviour is the *outermost visible feature* of the
+cipher, not a thin wrapper over readable text: remove it and the underlying stream is still
+statistically random. The construction simultaneously (i) flattens the single-symbol
+distribution, (ii) decouples neighbours, and (iii) forbids repeats — and peeling off (iii) does
+not expose (i) or (ii) as artefacts of English. The identification is coherent, if
+discouraging: a strong non-repeating key-stream wearing a deliberate no-repeat constraint. The
+practical lead is now precise — the open problem is to find the *generating rule* that makes
+the stream repeat-free, because that rule, not an additive key, is the part of the design that
+leaves a trace.
+
 ---
 
 ## 6. Evaluating the "27×27 totient map" solution
@@ -635,6 +687,7 @@ python3 analysis/triage.py            # structure probes
 python3 analysis/keystream_search.py  # number-theoretic keystream search (+ An End control)
 python3 analysis/deep_probes.py       # periodic IoC, isomorph, transposition, bigram, entropy
 python3 analysis/identify.py          # cipher-family identification by fingerprint matching
+python3 analysis/antidoublet.py       # anti-doublet layer: non-additivity + de-chaining stream
 python3 analysis/frequency.py         # solved-corpus letter/word frequencies
 python3 analysis/difficulty.py        # difficulty ranking by IoC
 python3 analysis/charts.py            # regenerate the figures
