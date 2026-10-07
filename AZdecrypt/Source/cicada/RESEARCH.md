@@ -237,7 +237,7 @@ search returns gibberish at every key length.
 
 This is not a limitation of the tool; it is the tool reporting the truth. The solved pages used
 *simple* ciphers and left *detectable* structure. The unsolved pages left none, consistent with
-a non-repeating key-stream (or something stronger) — precisely the class these attacks cannot
+a non-repeating key-stream (or something stronger), precisely the class these attacks cannot
 break, and precisely why no one has broken them.
 
 ### 4.3 Ranking every page by predicted difficulty
@@ -374,8 +374,8 @@ natural candidate for GPU acceleration if the sequence library is widened.
 ### 5.3 Ruling out three further cipher classes
 
 Sections 4–5.2 eliminate monoalphabetic ciphers, short-period Vigenère, and the common
-number-theoretic key-streams. Three cipher classes remain worth testing explicitly — a
-**repeating key of any period**, **homophonic substitution**, and **pure transposition** —
+number-theoretic key-streams. Three cipher classes remain worth testing explicitly: a
+**repeating key of any period**, **homophonic substitution**, and **pure transposition**,
 alongside a direct look at the **bigram distribution** and a calibrated **entropy** figure.
 The script `analysis/deep_probes.py` runs all of them, again calibrated against the plaintext
 control (*Loss of Divinity*) and the solved key-stream page (*An End*).
@@ -406,7 +406,7 @@ no repeating key of period ≤ 40.
 ![Friedman periodic-IoC test: a simulated repeating key spikes at its period and harmonics, the plaintext control rides high everywhere, and the unsolved pages stay pinned to the random floor](assets/periodic_ioc.png)
 
 **Isomorph test (homophonic substitution).** A repeated plaintext substring that contains a
-repeated letter leaves a repeated *first-occurrence pattern* — an isomorph such as `ABCCBA` —
+repeated letter leaves a repeated *first-occurrence pattern*, an isomorph such as `ABCCBA`,
 and under a periodic or naively homophonic cipher that pattern can survive into the
 ciphertext. We count non-trivial repeated isomorphs (length 6) and compare to the mean over
 200 random shuffles of the same symbols. No page shows isomorph excess above chance; the
@@ -424,12 +424,12 @@ should) while the unsolved pages score z = 800–4700 (wildly unlike English). T
 their flat IoC this rules out pure transposition and plaintext: the symbol *frequencies
 themselves* have been flattened, which only a polyalphabetic / key-stream step does.
 
-**Bigram distribution.** The solved corpus's most common digraphs are the English ones —
-`OU, THE, ER, RE, ST, IS, AN, IN` — and the plaintext control is dominated by `BE, WE, ER, RE,
+**Bigram distribution.** The solved corpus's most common digraphs are the English ones
+(`OU, THE, ER, RE, ST, IS, AN, IN`), and the plaintext control is dominated by `BE, WE, ER, RE,
 THE`. The unsolved pages show no such structure: their top bigrams are low-count and arbitrary
 (p0-2: `ITH, HB, YH, CF`; p40-53's most frequent pair `FA` occurs just 13 times in 3,008
-runes, barely above the ≈ 10 expected by chance). Quantified as a χ² dependence score —
-observed adjacent-pair counts against the independence model `n_a·n_b/N` — the plaintext
+runes, barely above the ≈ 10 expected by chance). Quantified as a χ² dependence score
+(observed adjacent-pair counts against the independence model `n_a·n_b/N`), the plaintext
 control registers z = **18.4** (strong neighbour coupling) while every unsolved page sits at
 z ≈ 0 (−1.5 to +1.9). Adjacent runes are statistically independent; there is no digraph
 structure to exploit.
@@ -438,16 +438,16 @@ structure to exploit.
 unsolved page, essentially the 29-symbol maximum of **4.858**, and the conditional entropy
 H₂ (the surprise in each rune given its predecessor) stays high. The contrast with English is
 clearest at matched length: *Loss of Divinity* (755 runes) has H₂ = **3.11** bits, whereas
-p0-2 (729 runes) has **3.93** — the plaintext is markedly more predictable. (Conditional-entropy
+p0-2 (729 runes) has **3.93**, so the plaintext is markedly more predictable. (Conditional-entropy
 estimates are biased downward at small `N`, so they are compared only within similar lengths.)
 The unsolved pages carry close to the maximum possible information per symbol; no redundancy
 remains for an attack to grip.
 
 **Verdict.** Across all three cipher classes the result matches Sections 4–5.2: the plaintext
 control lights up on every probe, and every unsolved page sits at the random / independent
-baseline — with a single, striking exception developed in Section 5.4. The remaining cipher
+baseline, with a single striking exception developed in Section 5.4. The remaining cipher
 must flatten the unigram distribution, leave no period ≤ 40, create no homophonic isomorphs,
-and decouple neighbours — i.e. a **non-repeating key-stream** (running key, autokey, or a
+and decouple neighbours: a **non-repeating key-stream** (running key, autokey, or a
 longer construction), possibly combined with transposition or interrupters. That is exactly
 the class Section 4 predicted, and exactly the class no public attack has broken.
 
@@ -457,7 +457,7 @@ Every probe so far returns "random." There is exactly one exception, long noted 
 CicadaSolvers community and documented on the *Uncovering Cicada* wiki [7], and
 `deep_probes.py` reproduces it precisely: **adjacent identical runes (doublets) are strongly
 suppressed.** Pooled across the nine unsolved page-groups (12,956 runes, with adjacency broken
-between groups), doublets occur **86 times where 446 are expected** by chance — **0.66% against
+between groups), doublets occur **86 times where 446 are expected** by chance, **0.66% against
 3.45%**, a **17σ** deficit:
 
 | | runes | doublets | rate | expected | binomial z |
@@ -474,7 +474,7 @@ codebase.
 The same signal is visible as a map. The adjacent-pair (bigram) heatmaps below put the plaintext
 control beside the pooled unsolved corpus: English concentrates probability on a handful of
 digraphs (the bright `THE`, `ER`, `E`-row cells), whereas the unsolved corpus is a uniform
-field — with one exception, a **dark diagonal**. The diagonal is exactly the doublet cells
+field, with one exception, a **dark diagonal**. The diagonal is exactly the doublet cells
 (first rune = second rune); its darkness against the otherwise flat field is the 0.66% doublet
 suppression rendered visually.
 
@@ -490,7 +490,7 @@ the nonzero first-differences are flat: the gap (runeᵢ₊₁ − runeᵢ) mod 
 also precisely the mechanism behind the negative isomorph scores in Section 5.3: a process that
 avoids length-2 repeats also yields slightly fewer short repeated patterns than a blind shuffle.
 
-What does it buy an attacker? On its own, no decryption — it yields neither plaintext nor key.
+What does it buy an attacker? On its own, no decryption: it yields neither plaintext nor key.
 But it is the single genuine structural handle in the corpus, and it constrains the cipher's
 construction: the ciphertext behaves like a sequence in which no symbol may equal the one
 before it. That is the natural output of, for example, a running-key / stream cipher over a
@@ -503,8 +503,8 @@ reverse-engineer the generating rule.
 
 The nine unsolved page-groups share a single fingerprint across Sections 4–5.4 (IoC ≈ 0.0343,
 doublets ≈ 0.7%, no period, independent neighbours), so they are almost certainly enciphered
-by one scheme. To *identify its family* we encipher known English runes — the pooled solved
-corpus — under each candidate cipher and compare the resulting fingerprint to the observed one
+by one scheme. To *identify its family* we encipher known English runes (the pooled solved
+corpus) under each candidate cipher and compare the resulting fingerprint to the observed one
 (`analysis/identify.py`). The family that matches on every axis, including the anomalous
 doublet suppression, is the identification.
 
@@ -518,33 +518,33 @@ doublet suppression, is the identification.
 | **stream + anti-doublet rule** | 0.0345 | **0.00** | 0.0355 | 2.6 |
 | **unsolved pages (observed)** | **0.0343** | **0.71** | **0.0370** | **0.6** |
 
-![Cipher-family fingerprint heatmap: green cells are close to the observed value, red far. Only the anti-doublet stream matches the observed row on all four axes — every other family turns red on at least one, and on the doublet column in particular](assets/fingerprint.png)
+![Cipher-family fingerprint heatmap: green cells are close to the observed value, red far. Only the anti-doublet stream matches the observed row on all four axes; every other family turns red on at least one, and on the doublet column in particular](assets/fingerprint.png)
 
 Reading the table (and the heatmap above, where red marks a mismatch) top to bottom eliminates
 the families one at a time:
 
-- **Monoalphabetic substitution** leaves every English statistic intact — IoC 0.061, doublets
-  2.6%, strong neighbour coupling (z = 81) — because relabelling symbols changes none of them.
+- **Monoalphabetic substitution** leaves every English statistic intact (IoC 0.061, doublets
+  2.6%, strong neighbour coupling z = 81), because relabelling symbols changes none of them.
   The observed pages show none of this; monoalphabetic ciphers were already excluded in Section
   4 and are confirmed excluded here.
 - **A repeating-key Vigenère** flattens the overall IoC but betrays itself in the *periodic*
-  IoC (0.061 — a sharp column-IoC spike at the key length) and in residual neighbour coupling
+  IoC (0.061, a sharp column-IoC spike at the key length) and in residual neighbour coupling
   (z = 18). The observed periodic IoC is flat (0.037), so there is no repeating key, consistent
   with Section 5.3.
 - **A running key built from a second English text** sits slightly *above* the random floor
   (IoC 0.0359), because summing two lumpy English distributions is not perfectly flat, and it
   does not suppress doublets (3.6%). The observed IoC sits right *on* the floor (0.0343), which
   disfavours an English running key and points to a near-uniform key-stream.
-- **The vanilla additive streams** — the number-theoretic φ(prime) stream that solved *An End*,
-  and a uniform one-time pad — match the observed pages on IoC, periodicity, and neighbour
+- **The vanilla additive streams**, the number-theoretic φ(prime) stream that solved *An End*
+  and a uniform one-time pad, match the observed pages on IoC, periodicity, and neighbour
   independence almost perfectly. They fail on exactly one axis: they leave doublets at the
   chance rate (3.1–3.6%), whereas the real pages suppress them to 0.7%.
 - **Only an additive stream combined with a rule that forbids equal adjacent symbols**
   reproduces all four numbers at once, including the doublet suppression.
 
 **Identification.** The unsolved pages are best identified as a **non-repeating additive
-key-stream cipher over the 29 runes** — the same broad family as the solved *An End* page, and
-unlike the monoalphabetic / periodic ciphers of the other solved pages — carrying one extra,
+key-stream cipher over the 29 runes**, the same broad family as the solved *An End* page and
+unlike the monoalphabetic / periodic ciphers of the other solved pages, carrying one extra
 deliberate property: **adjacent ciphertext runes are almost never equal.** Every measurement in
 this study is consistent with a keyed or number-theoretic stream whose construction excludes (or
 heavily penalises) equal neighbours; the anti-doublet behaviour is the single feature that
@@ -568,8 +568,8 @@ part that matters.
 **The suppression is genuinely non-additive.** An additive stream C = P + K (mod 29) produces
 a doublet exactly when Pᵢ − Pᵢ₋₁ = Kᵢ₋₁ − Kᵢ, which for any ordinary key happens at about the
 chance rate. An additive cipher should therefore leave doublets near 3.45%, and measurement
-confirms it: English plaintext doubles at 2.62%, a simulated totient stream at 3.12%, and —
-decisively — the real solved *An End* page, which *is* an additive totient stream, at
+confirms it: English plaintext doubles at 2.62%, a simulated totient stream at 3.12%, and,
+decisively, the real solved *An End* page, which *is* an additive totient stream, at
 **2.38%**. None is suppressed. The unsolved pages' 0.66% cannot come from the additive step
 alone; it is a separate, non-additive layer that *An End does not have*. The unsolved cipher is
 thus strictly more than the *An End* construction: it shares the flat key-stream statistics but
@@ -597,19 +597,47 @@ carry its structure.
 
 Across every unsolved page the increment stream is flat: IoC ≈ 0.0354 (the random floor),
 entropy H₁ ≈ 4.81 bits against the 4.858 maximum, and bigram-dependence z ≈ 0. The probe is
-calibrated — the plaintext control's increment stream still registers strong coupling (z =
-**17.9**), exactly the signal a near-plaintext page would show — and the unsolved pages show
-none of it.
+calibrated: the plaintext control's increment stream still registers strong coupling (z =
+**17.9**), exactly the signal a near-plaintext page would show, and the unsolved pages show
+none of
+it.
 
 **What this means.** The anti-doublet behaviour is the *outermost visible feature* of the
 cipher, not a thin wrapper over readable text: remove it and the underlying stream is still
 statistically random. The construction simultaneously (i) flattens the single-symbol
-distribution, (ii) decouples neighbours, and (iii) forbids repeats — and peeling off (iii) does
+distribution, (ii) decouples neighbours, and (iii) forbids repeats, and peeling off (iii) does
 not expose (i) or (ii) as artefacts of English. The identification is coherent, if
 discouraging: a strong non-repeating key-stream wearing a deliberate no-repeat constraint. The
-practical lead is now precise — the open problem is to find the *generating rule* that makes
+practical lead is now precise: the open problem is to find the *generating rule* that makes
 the stream repeat-free, because that rule, not an additive key, is the part of the design that
 leaves a trace.
+
+### 5.7 Consistency with Cicada's documented methods
+
+The statistical identification lines up with what the solved pages, and the community record of
+them, already establish about Cicada's cipher toolkit. Two techniques recur across the
+confirmed solves. The first is a running key-stream built from number theory and reduced mod
+29: *An End* uses a running stream of Euler's totient function (φ) mod 29, the same modulus and
+the same φ/prime motifs that appear elsewhere. The second is the interrupter, a rune that is
+left unencrypted and skipped by the key. On *An End* a single ᚠ (F) rune is passed over and is
+the only symbol not enciphered, and the *Welcome* page pauses its Vigenère key at ᚠ positions
+[8]. An interrupter desynchronises a key-stream from the text, which is precisely the kind of
+mechanism that erases a repeating period and defeats column-based attacks. That is consistent
+with the flat periodic-IoC result in Section 5.3.
+
+We checked whether the ᚠ rune is statistically marked in the unsolved pages, as an interrupter
+might make it. It is not. ᚠ occurs 458 times in the 12,956-rune unsolved corpus, a rate of
+3.54%, essentially its 3.45% chance share, and the per-page rate ranges from 1.95% to 4.66%
+with no consistent excess. So if an interrupter rule is present, it does not announce itself
+through rune frequency, and would have to be inferred from the key geometry rather than the
+counts.
+
+Taken together the picture is coherent. The unsolved pages use the same broad construction
+Cicada demonstrated on the pages it allowed to be solved: a non-repeating key-stream over 29
+runes in the φ/prime idiom, very plausibly combined with an interrupter or skip rule and the
+anti-doublet behaviour documented in Sections 5.4 to 5.6. None of these ingredients is exotic.
+What remains hidden is their specific parameters, namely the exact stream, the key, and the
+placement of any skips. That is the search the statistics cannot shortcut.
 
 ---
 
@@ -738,5 +766,8 @@ Publication No. 22, Riverbank Laboratories, 1922.
 
 [6] *Boxentriq*, guide to the Cicada 3301 ciphers and the Gematria Primus.
 
-[7] *Uncovering Cicada* wiki, *Frequency Analysis — Unsolved Pages*.
+[7] *Uncovering Cicada* wiki, *Frequency Analysis: Unsolved Pages*.
 <https://uncovering-cicada.fandom.com/wiki/Frequency_Analysis_Unsolved_Pages>
+
+[8] *Uncovering Cicada* wiki, *What Happened: Liber Primus (Post 2014)*.
+<https://uncovering-cicada.fandom.com/wiki/What_Happened_Liber_Primus_(Post_2014)>
