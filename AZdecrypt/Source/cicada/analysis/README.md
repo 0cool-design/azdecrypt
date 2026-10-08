@@ -15,6 +15,8 @@ Reproduce the figures and tables in [`../RESEARCH.md`](../RESEARCH.md).
   under each candidate cipher and matching the fingerprint to the observed pages.
 - `antidoublet.py` shows the doublet suppression is non-additive (An End, an additive stream,
   does not suppress) and that the increment/de-chaining stream is still flat.
+- `cicada_primes.py` tests the Cicada OS prime list (`../data/cicada_os_primes.txt`, 2..3301)
+  as a keystream against the unsolved pages; recovers An End as control, nothing else.
 
 ```
 python3 frequency.py
@@ -25,6 +27,7 @@ python3 keystream_search.py
 python3 deep_probes.py
 python3 identify.py
 python3 antidoublet.py
+python3 cicada_primes.py
 python3 charts.py
 python3 charts_probes.py
 ```

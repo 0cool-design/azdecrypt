@@ -639,6 +639,31 @@ anti-doublet behaviour documented in Sections 5.4 to 5.6. None of these ingredie
 What remains hidden is their specific parameters, namely the exact stream, the key, and the
 placement of any skips. That is the search the statistics cannot shortcut.
 
+### 5.8 The Cicada OS prime list as a key-stream
+
+The gpg-signed Cicada 3301 "OS" ships a small script, `prime_echo`, that prints a specific
+sequence of primes. Parsed, it is the first 464 primes, 2 through 3301, with 3301 itself the
+464th prime and the group's namesake [9]. Because the solved *An End* page keys on a running
+totient-of-primes stream, this exact bounded list is a natural key-stream candidate for the
+unsolved pages, so we tested it directly (`analysis/cicada_primes.py`). Each page was
+deciphered with the list read four ways (raw prime, totient p-1, p+1, prime index), reduced mod
+29, added and subtracted, at small offsets, both linearly and as a repeating cycle of period
+464. Every decrypt was scored by the rune 4-gram model.
+
+The control passes. *An End* is recovered exactly: totient(p-1) subtracted at offset 0, 4-gram
+score -12.1 and IoC 0.0552, reading `AN END, WITHIN THE DEEP WEB, THERE EXISTS A PAGE THAT...`.
+No unsolved page does anything of the kind. The best candidate for every one scores about -14.6,
+the same noise floor seen in Section 5.2, leaves IoC at the random 0.034, and reads as
+gibberish. The period-464 cyclic reading, which this bounded list makes natural, is no better
+than the rest.
+
+So the elegant boundedness of the list, ending precisely on 3301, does not translate into a key
+for these pages. The negative is consistent with the identification in Sections 5.5 and 5.6:
+the unsolved cipher is more than a plain additive prime or totient stream, and the Cicada OS
+primes applied additively are still a plain additive stream. The list is saved as
+`data/cicada_os_primes.txt` for reuse, and this search is a natural extension point once the
+stream is composed with the anti-doublet or interrupter mechanisms rather than applied raw.
+
 ---
 
 ## 6. Evaluating the "27×27 totient map" solution
@@ -732,6 +757,7 @@ python3 analysis/keystream_search.py  # number-theoretic keystream search (+ An 
 python3 analysis/deep_probes.py       # periodic IoC, isomorph, transposition, bigram, entropy
 python3 analysis/identify.py          # cipher-family identification by fingerprint matching
 python3 analysis/antidoublet.py       # anti-doublet layer: non-additivity + de-chaining stream
+python3 analysis/cicada_primes.py     # test the Cicada OS prime list (2..3301) as a keystream
 python3 analysis/frequency.py         # solved-corpus letter/word frequencies
 python3 analysis/difficulty.py        # difficulty ranking by IoC
 python3 analysis/charts.py            # regenerate the solved-corpus + difficulty figures
@@ -771,3 +797,6 @@ Publication No. 22, Riverbank Laboratories, 1922.
 
 [8] *Uncovering Cicada* wiki, *What Happened: Liber Primus (Post 2014)*.
 <https://uncovering-cicada.fandom.com/wiki/What_Happened_Liber_Primus_(Post_2014)>
+
+[9] Cicada 3301, `prime_echo` script from the signed "OS" distribution: the first 464 primes,
+2 .. 3301. Mirror: <https://pastebin.com/raw/sSJgTKQD>
