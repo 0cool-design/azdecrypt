@@ -3,6 +3,9 @@ import glob, os, collections
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import _theme
+from _theme import INK, BLUE, TEAL, DEEP, SAND, ORANGE, RED, SLATE, GRID
+_theme.apply()
 
 RUNES = "ᚠᚢᚦᚩᚱᚳᚷᚹᚻᚾᛁᛄᛇᛈᛉᛋᛏᛒᛖᛗᛚᛝᛟᛞᚪᚫᚣᛡᛠ"
 LAT = ["F","U","TH","O","R","C","G","W","H","N","I","J","EO","P","X","S","T","B",
@@ -12,10 +15,6 @@ SEP = set("•⁘⁚⁖⁜\n")
 base = "/home/Ocool/Cicada/azdecrypt/AZdecrypt/Source/cicada/data/pages"
 out  = "/home/Ocool/Cicada/azdecrypt/AZdecrypt/Source/cicada/assets"
 os.makedirs(out, exist_ok=True)
-
-INK="#1b2a4a"; BLUE="#3b6ea5"; GREEN="#4a9b5e"; AMBER="#d99a2b"; RED="#c0493b"
-plt.rcParams.update({"font.size":11,"axes.edgecolor":"#888","axes.grid":True,
-                     "grid.alpha":0.25,"figure.dpi":130})
 
 # ---- gather solved corpus ----
 seq=[]; words=[]
@@ -31,23 +30,28 @@ N=len(seq); cnt=collections.Counter(seq)
 # ---- 1. letter/rune frequency ----
 items=cnt.most_common()
 labels=[LAT[i] for i,_ in items]; pct=[100*c/N for _,c in items]
-fig,ax=plt.subplots(figsize=(11,4.5))
-ax.bar(range(len(labels)),pct,color=BLUE,edgecolor=INK,linewidth=.6)
+fig,ax=plt.subplots(figsize=(11,4.6))
+ax.bar(range(len(labels)),pct,color=TEAL,edgecolor=INK,linewidth=.5,zorder=3)
 ax.set_xticks(range(len(labels))); ax.set_xticklabels(labels)
 ax.set_ylabel("frequency (%)"); ax.set_xlabel("Gematria Primus rune (Latin reading)")
-ax.set_title(f"Liber Primus solved corpus: rune frequency  (N={N} runes, 9 pages)")
+ax.grid(axis="x"); ax.set_axisbelow(True)
+_theme.titled(ax,"Solved corpus: rune frequency",
+              f"{N} runes across 9 pages — E dominates, matching English")
 ax.margins(x=0.01)
-fig.tight_layout(); fig.savefig(out+"/freq_letters.png"); plt.close(fig)
+fig.savefig(out+"/freq_letters.png"); plt.close(fig)
 
 # ---- 2. top words ----
 wc=collections.Counter(words).most_common(18)
 ws=[w for w,_ in wc][::-1]; wv=[c for _,c in wc][::-1]
-fig,ax=plt.subplots(figsize=(8,5.2))
-ax.barh(range(len(ws)),wv,color=GREEN,edgecolor=INK,linewidth=.6)
+fig,ax=plt.subplots(figsize=(8,5.4))
+ax.barh(range(len(ws)),wv,color=DEEP,edgecolor=INK,linewidth=.5,zorder=3)
 ax.set_yticks(range(len(ws))); ax.set_yticklabels(ws)
-ax.set_xlabel("count"); ax.set_title("Solved corpus: most common words")
-for i,v in enumerate(wv): ax.text(v+0.3,i,str(v),va="center",fontsize=9)
-fig.tight_layout(); fig.savefig(out+"/freq_words.png"); plt.close(fig)
+ax.set_xlabel("count"); ax.grid(axis="y")
+_theme.titled(ax,"Solved corpus: most common words",
+              "the English function-word skeleton (THE, TO, YOU, IS, WE …)")
+for i,v in enumerate(wv): ax.text(v+0.3,i,str(v),va="center",fontsize=8.5,color=SLATE)
+ax.margins(y=0.01)
+fig.savefig(out+"/freq_words.png"); plt.close(fig)
 
 # ---- 3. difficulty by IoC ----
 SOLVED={"0_warning","0_welcome","0_wisdom","0_koan_1","0_loss_of_divinity",
@@ -61,25 +65,32 @@ for fn in sorted(glob.glob(base+"/*.txt")):
     c=collections.Counter(s); n=len(s)
     ic=sum(v*(v-1) for v in c.values())/(n*(n-1))
     rows.append((ic,name,name in SOLVED))
-rows.sort()  # hardest (low IoC) first -> we plot ascending so easiest on right
+rows.sort()
 ics=[r[0] for r in rows]; names=[r[1] for r in rows]; solved=[r[2] for r in rows]
 def color(ic):
-    return GREEN if ic>0.055 else AMBER if ic>0.045 else "#cf7d2b" if ic>0.038 else RED
+    return TEAL if ic>0.055 else SAND if ic>0.045 else ORANGE if ic>0.038 else RED
 cols=[color(x) for x in ics]
-fig,ax=plt.subplots(figsize=(11,5.5))
-bars=ax.barh(range(len(names)),ics,color=cols,edgecolor=INK,linewidth=.6)
+fig,ax=plt.subplots(figsize=(11,5.8))
+ax.barh(range(len(names)),ics,color=cols,edgecolor=INK,linewidth=.5,zorder=3)
 ax.set_yticks(range(len(names)))
-ax.set_yticklabels([f"{n}{'  *' if sv else ''}" for n,sv in zip(names,solved)])
-ax.axvline(1/29,color="#444",ls="--",lw=1); ax.text(1/29,len(names)-0.5,"  random (1/29)",color="#444",fontsize=8,va="top")
-ax.axvline(0.0667,color="#444",ls=":",lw=1); ax.text(0.0667,len(names)-0.5,"  English-26",color="#444",fontsize=8,va="top")
-ax.set_xlabel("Index of Coincidence  (higher = more structure = easier to attack)")
-ax.set_title("Liber Primus pages ranked by predicted difficulty   (* = solved)")
+ax.set_yticklabels([f"{n}{'  ★' if sv else ''}" for n,sv in zip(names,solved)])
+ax.grid(axis="y"); ax.set_axisbelow(True)
+# reference lines, labelled in a clear band above the bars (no overlap)
+top=len(names)
+ax.set_ylim(-0.7, top+0.9)
+for x,lab in [(1/29,"random  1/29"),(0.0667,"English (26-letter)")]:
+    ax.axvline(x,color=SLATE,ls=(0,(4,3)),lw=1,zorder=2)
+    ax.text(x,top+0.15,lab,ha="center",va="center",fontsize=8.5,color=SLATE,
+            bbox=dict(boxstyle="round,pad=0.25",fc=_theme.CANVAS,ec=GRID,lw=.6))
+ax.set_xlabel("Index of Coincidence   (higher = more structure = easier to attack)")
+_theme.titled(ax,"Liber Primus pages ranked by predicted difficulty",
+              "★ = solved. Every statistically flat page (red) is unsolved")
 from matplotlib.patches import Patch
-ax.legend(handles=[Patch(color=GREEN,label="easy (monoalphabetic/plaintext)"),
-                   Patch(color=AMBER,label="medium"),
-                   Patch(color="#cf7d2b",label="hard (near-random)"),
-                   Patch(color=RED,label="hardest (flat / running-key)")],
-          loc="lower right",fontsize=8,framealpha=.9)
-fig.tight_layout(); fig.savefig(out+"/difficulty.png"); plt.close(fig)
+ax.legend(handles=[Patch(color=TEAL,label="easy — monoalphabetic / plaintext"),
+                   Patch(color=SAND,label="medium"),
+                   Patch(color=ORANGE,label="hard — near-random"),
+                   Patch(color=RED,label="hardest — flat / running-key")],
+          loc="lower right")
+fig.savefig(out+"/difficulty.png"); plt.close(fig)
 
-print("wrote:",os.listdir(out))
+print("wrote:", sorted(f for f in os.listdir(out) if f.endswith('.png')))

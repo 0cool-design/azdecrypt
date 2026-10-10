@@ -26,8 +26,10 @@ os.makedirs(out, exist_ok=True)
 C = 29
 random.seed(3301)
 
-INK="#1b2a4a"; BLUE="#3b6ea5"; GREEN="#4a9b5e"; AMBER="#d99a2b"; RED="#c0493b"
-plt.rcParams.update({"font.size":11,"axes.edgecolor":"#888","figure.dpi":130})
+import _theme
+from _theme import INK, BLUE, GREEN, TEAL, DEEP, SAND, AMBER, ORANGE, RED, SLATE, GRID
+_theme.apply()
+SEQ_CMAP = _theme.SEQ_CMAP
 
 def load(name):
     return [idx[c] for c in open(os.path.join(base, name), encoding="utf-8").read() if c in idx]
@@ -89,7 +91,7 @@ panels=[(pl,"plaintext control — Loss of Divinity",np.percentile(pl[pl>0],98))
         (un,"unsolved corpus (pooled, 9 pages)",2*un[un>0].mean())]
 fig,axes=plt.subplots(1,2,figsize=(13,6.2))
 for ax,(m,title,vmax) in zip(axes,panels):
-    im=ax.imshow(m,cmap="magma",vmin=0,vmax=vmax,aspect="equal")
+    im=ax.imshow(m,cmap=SEQ_CMAP,vmin=0,vmax=vmax,aspect="equal")
     ax.set_xticks(range(C)); ax.set_xticklabels(LAT,fontsize=6,rotation=90)
     ax.set_yticks(range(C)); ax.set_yticklabels(LAT,fontsize=6)
     ax.set_title(title,fontsize=12); ax.set_xlabel("second rune"); ax.set_ylabel("first rune")
