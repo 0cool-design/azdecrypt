@@ -178,6 +178,48 @@ English's 0.0667, precisely where real English spread across 29 runes should lan
 as the positive control: the toolkit's "solved" output is statistically indistinguishable from
 ordinary English, which is exactly what the unsolved pages (Section 4) fail to show.
 
+### 3.6 Prime gematria of the solved verses
+
+Each Gematria Primus rune carries a prime value (2, 3, 5 … 109), so every line of plaintext has
+a gematria total equal to the sum of its runes' primes. Cicada states on the *Wisdom* page that
+"the primes are sacred," which invites a direct test: are the verses themselves built to have
+prime gematria? For each line of the nine solved pages we sum the rune primes and test the
+total for primality, comparing the hit rate against the chance level the prime-number theorem
+predicts (about 1/ln(N) per line of total N). The computation is in `analysis/gematria_primes.py`.
+
+The result is a large and clearly intentional excess:
+
+| page | prime lines / lines |
+|------|:-------------------:|
+| *A Warning* | 9 / 10 |
+| *Parable* (p57) | 4 / 4 |
+| jpg229 (instruction) | 5 / 6 |
+| *Welcome* | 8 / 15 |
+| *Wisdom* | 4 / 10 |
+| *Loss of Divinity* | 9 / 25 |
+| jpg107-167 | 2 / 7 |
+| *An End* (p56) | 1 / 3 |
+| *Koan 1* (narrative) | 3 / 22 |
+| **total** | **45 / 102 (44%)** |
+
+Across the corpus **45 of 102 lines have a prime gematria, against 14.9 expected by chance**, a
+ratio of **3.0×**. For 102 lines with a chance rate near 15% this is about an 8σ excess, so it
+is not an artefact of sampling. The effect is strongest in the short declarative verses and
+weakest in narrative prose, a clean division: aphorisms and instructions were built to prime
+totals, while the story on *Koan 1* was not. The self-reference is explicit on *Wisdom*, where
+`THE PRIMES ARE SACRED` sums to 853 and `THE TOTIENT FUNCTION IS SACRED` to 1039, both prime,
+and on *Loss of Divinity*, where every short instruction (`PRESERVATION` 547, `ADHERENCE` 463,
+`PROGRAM YOUR MIND` 601, `BE PREPARED TO DESTROY ALL THAT YOU OWN` 1583) is prime while the
+long sentences around them are not.
+
+This is a different kind of claim from the numerology audited in Section 6, and the difference
+is exactly the one argued there. Here the test is specified in advance (is the line total
+prime?), it is applied uniformly to every line, and it is scored against an explicit null
+(the prime density). The 3.0× excess is a statistical regularity with a stated baseline, not a
+striking coincidence selected after the fact. It says nothing about the unsolved pages, whose
+plaintext is unknown, but it is firm evidence that prime gematria is a deliberate design
+principle of the book.
+
 ---
 
 ## 4. The unsolved pages, and the Index of Coincidence as a triage tool
@@ -806,6 +848,7 @@ python3 analysis/arith_search.py      # arithmetic-progression keystream search
 python3 analysis/solved_vocab_attack.py  # solved words as Vigenère keys / running key / cribs
 python3 analysis/more_attacks.py      # autokey, Beaufort, interrupter-aware keystream
 python3 analysis/frequency.py         # solved-corpus letter/word frequencies
+python3 analysis/gematria_primes.py   # prime gematria of the solved verses (Section 3.6)
 python3 analysis/difficulty.py        # difficulty ranking by IoC
 python3 analysis/charts.py            # regenerate the solved-corpus + difficulty figures
 python3 analysis/charts_probes.py     # doublets, bigram heatmap, fingerprint, periodic-IoC figures

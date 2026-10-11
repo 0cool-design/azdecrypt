@@ -1,11 +1,13 @@
 # Analysis scripts
 
-Reproduce the figures and tables in [`../RESEARCH.md`](../RESEARCH.md).
+Reproduce the figures and tables in [`../README.md`](../README.md).
 
 - `frequency.py` rune/letter and word frequencies of the solved corpus (+ IoC).
+- `gematria_primes.py` sums each solved verse's rune primes and tests the total for primality
+  (45 of 102 lines are prime, about 3x the chance rate).
 - `difficulty.py` ranks every page by IoC (predicted statistical difficulty).
 - `charts.py` renders the solved-corpus + difficulty PNGs into `../assets/` (needs matplotlib).
-- `charts_probes.py` renders the probe/identification figures — doublet bar, bigram heatmap,
+- `charts_probes.py` renders the probe/identification figures: doublet bar, bigram heatmap,
   cipher-family fingerprint heatmap, periodic-IoC curves (needs matplotlib + numpy).
 - `triage.py` structure probes (chi-squared, digraphic IoC, autocorrelation, compression).
 - `keystream_search.py` number-theoretic keystream search, with An End as a positive control.
