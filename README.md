@@ -1,801 +1,851 @@
-# AZDecrypt <a name="azdecrypt"></a>
+# Reproducing and Stress-Testing Liber Primus Decryptions
 
-AZdecrypt is a fast and powerful hillclimbing classical cipher solver written in [FreeBASIC](https://www.freebasic.net/) by [Jarl](https://zodiackillerfacts.com/tag/jarl-van-eycke/) [Van](https://www.brusselstimes.com/150781/flemish-warehouse-worker-cracks-350-year-old-code) [Eycke](https://scienceblogs.de/klausis-krypto-kolumne/jarl-van-eycke-solves-400-year-old-longitude-message/).
-
-Latest binaries can be found here:  
-- https://zodiackiller.net/community/zodiac-cipher-mailings-discussion/azdecrypt-1-19b/
-- https://www.freebasic.net/forum/viewtopic.php?p=203927#p203927
-
-[Additional README](https://raw.githubusercontent.com/doranchak/azdecrypt/main/AZdecrypt/Readme.txt)
-
-# Table of Contents
-1. [Solvers](#solvers)
-2. [Settings](#settings)
-3. [Build Steps](#build)
-4. [Stats](#stats)
-5. [Notes, Tips, and Tricks](#notes)
-6. [Release History](#releases)
-
-# Solvers <a name="solvers"></a>
-
-AZDecrypt's main window has a list of solvers.  Each one is a type of hillclimber that specializes in different types of ciphers:
-
-## Substitution
-
-Simple substitution ciphers (including homophonic substitution)
-
-## Substitution + columnar rearrangement
-
-A combination of simple substitution and moving columns around.
-
-## Substitution + columnar transposition
-
-A combination of simple substitution and [columnar transposition](https://en.wikipedia.org/wiki/Transposition_cipher#Columnar_transposition).
-## Substitution + crib grid
-This solver displays a grid that is the same shape as the input cipher.  You can enter your guesses for portions of the plaintext.  Then, the solver will search for the rest of the plaintext but maintain the plaintext entries you've made.
-## Substitution + crib list
-## Substitution + monoalphabetic groups
-## Substitution + nulls and skips
-Tries to figure out if certain symbols in a substitution cipher don't actually contribute towards the plaintext.
-A "null" is a position in the cipher text that does not translate to plaintext (and is ignored during decryption).  The solver will consider different positions to be nulls, and exclude them prior to the next steps of decryption.
-A "skip" is a missing symbol that is inserted at some position in the cipher.  The solver will put them in different positions of the ciphertext before proceeding to the next steps of decryption.
-[More info](http://www.zodiackillersite.com/viewtopic.php?f=81&t=4125)
-## Substitution + polyphones
-## Substitution + row bound
-## Substitution + row bound fragments
-## Substitution + sequential homophones
-## Substitution + simple transposition
-## Substitution + sparse polyalphabetism
-## Substitution + units
-Jarl's note on using this solver on nomenclator type ciphers:
-* After launching the solver a menu will pop up. You can set the Unit as Symbol or Horizontal sequence, the Mode to Replace with new symbols. If selected Horizontal sequence set the Horizontal sequence to 1. The Key length start determines the amount of Symbols or Horizontal sequences to be replaced. And set Replace, # of symbols per instance to 2 if you want to replace symbols with bigrams for example.
-## Substitution + vigenere
-## Substitution + vigenere word list
-## Bigram substitution
-## Higher-order homophonic
-## Merge sequential homophones
-## Non-substitution
-Scores your plain text and provides detailed n-gram stats
-## Columnar transposition (keyed)
-## Columnar rearrangement (keyed)
-[Demonstration](https://www.freebasic.net/forum/viewtopic.php?p=291162&sid=bc32599734174f3a33be0cb32188da84#p291162)
-## Grid rearrangement (keyed)
-## Periodic transposition
-
-[Demonstration of partial solve on transposed Z340 plaintext](https://zodiackiller.net/community/postid/88298/)
-
-Can solve a whole variety of transposition ciphers keyed or unkeyed as long as the transposition can be summarized by a limited set of periodic rules.
-Select "Periodic transposition [auto]" or "Periodic transposition inverted [auto]" if you want the solver to try to automatically determine the transposition.
-Note that the transposition solver will write additional output to the Output folder (for example, the transposition matrices it finds).
-
-One of the factors that guides this solver is *periodic redundancy*, a measurement that looks at periodicity in candidate transposition matrices.  Matrices that have a lot of periodic behavior will have a lot of repeating periods, which increases periodic redundancy.  If there is more randomness to the matrix, periodic redundancy will be low.  This measurement is balanced against the n-grams score to try to arrive at the correct transposition matrix.  [More info here in Jarl's post](https://zodiackiller.net/community/postid/88297/).
-
-**Normal vs inverted transposition matrices**
-
-Say we have the following transposition matrix:
-
-```
-1   3   5   7   9   11  13  15  17  19  21  23  25  27  29  31  33
-35  37  39  41  43  45  47  49  51  53  55  57  59  61  63  65  67
-69  71  73  75  77  79  81  83  85  87  89  91  93  95  97  99  101
-103 105 107 109 111 113 115 117 119 118 116 114 112 110 108 106 104
-102 100 98  96  94  92  90  88  86  84  82  80  78  76  74  72  70
-68  66  64  62  60  58  56  54  52  50  48  46  44  42  40  38  36
-34  32  30  28  26  24  22  20  18  16  14  12  10  8   6   4   2
-```
-
-A) Say we put the first letter of the plaintext at position 1, the second letter at pos 2, then pos 3 etc. (transposition)
-
-If we use the methodology [explained here](https://zodiackiller.net/community/postid/88297/) we end up with the following period map:
-
-```
-118  -117 116  -115 114  -113 112  -111 110  -109 108  -107 106  -105 104  -103 102
--101 100  -99  98   -97  96   -95  94   -93  92   -91  90   -89  88   -87  86   -85
-84   -83  82   -81  80   -79  78   -77  76   -75  74   -73  72   -71  70   -69  68
--67  66   -65  64   -63  62   -61  60   -59  58   -57  56   -55  54   -53  52   -51
-50   -49  48   -47  46   -45  44   -43  42   -41  40   -39  38   -37  36   -35  34
--33  32   -31  30   -29  28   -27  26   -25  24   -23  22   -21  20   -19  18   -17
-16   -15  14   -13  12   -11  10   -9   8    -7   6    -5   4    -3   2    -1
-```
-
-These are all unique periods so the solver could never get it. Study the matrices and see why.
-
-Now, if we go back to step A, instead of putting, we get the letter from position 1, then we get the letter from pos 2 etc. (untransposition)
-
-It would equal to the following matrix (for putting, transposition)
-
-```
-1   119 2   118 3   117 4   116 5   115 6   114 7   113 8   112 9
-111 10  110 11  109 12  108 13  107 14  106 15  105 16  104 17  103
-18  102 19  101 20  100 21  99  22  98  23  97  24  96  25  95  26
-94  27  93  28  92  29  91  30  90  31  89  32  88  33  87  34  86
-35  85  36  84  37  83  38  82  39  81  40  80  41  79  42  78  43
-77  44  76  45  75  46  74  47  73  48  72  49  71  50  70  51  69
-52  68  53  67  54  66  55  65  56  64  57  63  58  62  59  61  60
-```
-
-And if we extract the period map now we get:
-
-```
-2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2
-2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2
-2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2
-2  2  2  2  2  2  2  2  -1 -2 -2 -2 -2 -2 -2 -2 -2
--2 -2 -2 -2 -2 -2 -2 -2 -2 -2 -2 -2 -2 -2 -2 -2 -2
--2 -2 -2 -2 -2 -2 -2 -2 -2 -2 -2 -2 -2 -2 -2 -2 -2
--2 -2 -2 -2 -2 -2 -2 -2 -2 -2 -2 -2 -2 -2 -2 -2
-```
-
-So now it's periodic again. So by inverting the matrix in the solver we can solve these more difficult cases.
-
-Jarl made a tool for analyzing transposition matrices as of AZdecrypt 1.21: *Stats, transposition matrix analysis*.
-
-Also, if you go to *Format*, and then *Convert*, there are tools to extract period maps and invert matrices, etc.
-
-Put in the first matrix, the one that starts with `1 3 5` etc and click *transposition matrix analysis*.
-
-Output should be:
-
-```
-AZdecrypt transposition matrix stats for: test.txt
----------------------------------------------------------
-Locality (linear distance between numbers): 98.31%, 0.83%
-Locality (distance from natural positions): 33.89%, 33.89%
-
-Periodic stepping: redundancy% (inverted, standard)
---------------------------------------------------
-1: 84.57%, 0%
-2: 83.62%, 85.44%
-3: 82.67%, 0%
-4: 81.70%, 85.39%
-5: 80.71%, 0%
-6: 79.71%, 85.33%
-```
-
-It shows that the logarithmic periodic redundancy at stepping 1 inverted is 84.57%, meaning that it should be easy to solve.
-
-More difficult cases require higher stepping levels to solve.
-
-## Simple transposition
-The same solver as the Substitution + simple transposition but does not perform substitution
+*A compact toolkit, the pages it can and cannot read, and an evidence-based review of a popular proposed solution.*
 
 ---
 
-# Settings <a name="settings"></a>
+## Abstract
 
-Under "Settings → Solver Settings":
+The Cicada 3301 *Liber Primus* is a corpus of roughly 74 pages written in a 29-symbol
+runic alphabet, the Gematria Primus. About 17 pages were solved within months of their 2014
+release; the remainder have resisted public cryptanalysis for over a decade. We present
+`cicada`, a small, dependency-free C++ toolkit that transliterates the Gematria Primus and
+implements the cipher methods known to decrypt the solved pages (Atbash, Vigenère, and
+totient/prime key-streams), together with a statistical search harness and a set of analysis
+scripts. The toolkit reproduces the published solutions exactly and is validated against
+planted known-answer ciphers. Applied systematically to the unsolved pages it recovers no
+plaintext, and we show through the Index of Coincidence (IoC) and a battery of structure
+probes that these pages are statistically indistinguishable from uniform noise over 29
+symbols (IoC ≈ 0.034). This observation excludes the entire class of monoalphabetic and
+periodic-polyalphabetic attacks that broke the easy pages. A number-theoretic key-stream
+search rediscovers the solved *An End* page as a positive control but yields nothing on the
+unsolved corpus. Further probes for repeating keys, homophonic substitution, and transposition
+are likewise negative; the sole departure from randomness is a pronounced suppression of
+doublets (adjacent identical runes occur at 0.66% against an expected 3.45%), which we confirm
+independently and discuss as the one genuine structural handle on the corpus. Fingerprint
+matching against simulated ciphers identifies the family as a non-repeating additive key-stream
+carrying an anti-doublet property, and excludes monoalphabetic substitution, repeating-key
+Vigenère, pure transposition, and English running keys. Finally, we evaluate a widely circulated "27×27 totient map" proposal and
+find that although its arithmetic is correct, it does not meet the evidentiary standard
+required to verify a decryption. All results are reproducible from the commands in Section 8.
 
-## [General] CPU Threads
+**Key findings.**
 
-## [General] Thread wait
-
-## [General] Entropy weight
-
-## [General] Iterations
-
-The number of total iterations performed during the search by the main hill climber (aka, the "inner" hill climber.  see "Hill climber iterations" below).  Note: When AZdecrypt writes results to the Output directory, it will write intermediate output files after 60 seconds of no output.  This is more likely to occur when the solver takes a while to run, such as when iterations are high.
-
-List of solvers that use only the inner hill climber (and thus, "hill climber iterations" setting will have no additional effect):
-
-* Substitution
-* Substitution + crib grid
-* Substitution + crib list
-* Substitution + monoalphabetic groups
-* Substitution + polyphones: User defined polyphones
-* Substitution + polyphones: Hafer shifts: -N/+N
-* Substitution + row bound
-* Substitution + sequential homophones
-* Substitution + sparse polyalphabetism
-* Substitution + vigenère word list
-* Bigram substitution
-* Higher-order homophonic
-* Merge sequential homophones
-
-## [General] Iterations factor
-
-## [General] Hill climber iterations
-
-Some solvers use two hill climbers: An "inner" hill climber, and an "outer" hill climber.  The "iterations" setting is for the inner hill climber (substitution solver etc), and the "hill climber iterations" setting is for a secondary hill-climber on top of the substitution hill-climber.  For example, solvers that use a secondary hill-climber have the following on top in the Output window: Restart: 1 Hill climber: 90/5000 @ 500000. The 5000 here are the hill-climber iterations and the 500000 the iterations.
-
-List of solvers that use both the inner and outer hill climbers:
-
-* Substitution + columnar rearrangement
-* Substitution + columnar transposition
-* Substitution + nulls and skips
-* Substitution + polyphones: User defined polyphones + extra letters
-* Substitution + polyphones: Hafer shifts: any 2 shifts
-* Substitution + row bound fragments
-* Substitution + simple transposition
-* Substitution + units
-* Substitution + vigenère
-
-## [General] Hill climber iterations factor
-## [General] N-gram factor
-## [General] Multiplicity weight
-
-This value will "punish" solutions that are produced by increasing the multiplicity (ratio of unique symbols to cipher length) of the cipher text.  Defaults to 0 which means this punishment will not occur.  A value of 1 is a good starting point for including the punishment.
-
-Jarl says:  It follows this calculation: `score/=1+((unique_symbols/cipher_length)*multiplicity_weight)`. The higher the multiplicity, the more the score will be reduced. It may prevent some of the solvers from inflating the score by changes that increase multiplicity. It will still do that but now there is a trade off.  Secondly it can also be used as a filter, in case of using the Substitution + units solver for removing the spaces as nulls, the key size (amount of null symbols) will increase with every hill-climber iteration and eventually the multiplicity will become very high and the solver may find non-solutions that exceed the score of the underlying plain text, in that case the multiplicity weight will punish these and the best solution (according to the multiplicity weight trade off) will still be on top, sort of.
-
-## [General] Output to file
-## [General] Output to batch
-## [General] Output scores over
-## [General] Output improvements only
-## [General] Output additional stats
-## [General] Overwrite existing solver output
-## [General] Add PC-cycles to file output format
-## [General] Restarts
-## [General] Temperature
-## [General] Enable memory checks
-## [General] Enable screen size checks
-## [General] 8-gram memory limit
-## [General] 8-gram caching
-## [General] Add spaces to output
-
-Note: For this feature to work, n-gram stats that consist only of the letters A through Z must be loaded.  For example, any of the languages in the `Wortschatz` folder meet this condition.
-
-## [General] Add spaces to output iterations
-## [General] Letter n-gram log value cut-off
-## [General] Homophone weight
-
-When this is set to 0 (the default value), the substitution solver may sometimes allow a plaintext letter to be assigned to more than one ciphertext letter.  If you want this to be more strict, where only zero or one ciphertext letter assignments are permitted per plaintext letter, change the `Homophone weight` to `1`.
+- We implement a self-contained toolkit (`cicada`) for the *Liber Primus* that transliterates
+  the 29-rune Gematria Primus and applies the cipher methods used on the solved pages (Atbash,
+  Vigenère, totient/prime key-streams), plus a statistical search harness.
+- It reproduces the known solves exactly. The *A Warning* page (Atbash) and the *An End* page
+  (totient key-stream) decrypt to clean English, and *The Loss of Divinity* is shown to be
+  plaintext.
+- Run systematically against the unsolved pages it produces nothing, and the Index of
+  Coincidence explains why: those pages are statistically flat (≈ 0.034, i.e. random over 29
+  symbols), which rules out the whole class of attacks that cracked the easy pages.
+- We independently audit a widely shared "27×27 totient map" solution. Its arithmetic is
+  genuinely correct, but the arithmetic does not verify the decryption. We make the
+  distinction precise and state what would constitute proof.
 
 ---
 
-# Build steps <a name="build"></a>
+## 1. Background: the Gematria Primus
 
-1. Unzip the 3 folders in the root of C drive. (`AZdecrypt`, `FbEdit` and `FreeBASIC-1.09.0-winlibs-gcc-9.3.0`)
-2. Open `FbEdit` under `FbEdit`.
-3. Open `AZdecrypt.bas`.
-4. Click the green play icon to compile and run.
+The *Liber Primus* is written in a 29-symbol runic alphabet. Each rune maps to a Latin letter
+(or digraph) and to a prime number, in a fixed order (index 0–28) [5, 6]:
 
-Next to the green play icon there is `Windows GCC` which can be changed to `Windows GAS` for much faster compilation time. But GAS builds a slower program.
+| idx | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 |
+|-----|---|---|---|---|---|---|---|---|---|---|----|----|----|----|----|
+| rune| ᚠ | ᚢ | ᚦ | ᚩ | ᚱ | ᚳ | ᚷ | ᚹ | ᚻ | ᚾ | ᛁ | ᛄ | ᛇ | ᛈ | ᛉ |
+| lat | F | U | TH| O | R | C | G | W | H | N | I | J | EO | P | X |
+| pri | 2 | 3 | 5 | 7 | 11| 13| 17| 19| 23| 29| 31 | 37 | 41 | 43 | 47 |
 
-Options, Build Options to change compiler flags.
+| idx | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 |
+|-----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|
+| rune| ᛋ | ᛏ | ᛒ | ᛖ | ᛗ | ᛚ | ᛝ | ᛟ | ᛞ | ᚪ | ᚫ | ᚣ | ᛡ | ᛠ |
+| lat | S | T | B | E | M | L | NG | OE | D | A | AE | Y | IA | EA |
+| pri | 53 | 59 | 61 | 67 | 71 | 73 | 79 | 83 | 89 | 97 | 101 | 103 | 107 | 109 |
 
-Options, Path Options to change paths.
+Two properties matter throughout. Several runes are **digraphs** (TH, EO, NG, OE, AE, IA, EA),
+and several Latin letters are **ambiguous** (U/V, C/K, S/Z share a rune). This ambiguity is a
+recurring source of false confidence, because it grants any proposed decoder additional degrees
+of freedom.
 
-The substitution solver = `sub azdecrypt_234567810g(byval tn_ptr as any ptr)`.
-
-Note: To tune the compiled binary to a specific CPU architecture, use the `march` command line options.  For example:  `-march=skylake`.  To optimize to whatever CPU you're using, use `-march=native`.
-
-# Stats <a name="stats"></a>
-
-## Unigrams
-
-[Jarl demonstrates how to extract periodicities from a transposition matrix entered in the input window](https://zodiackiller.net/community/postid/88297/), and explains Entropy vs Normalized Entropy.
-
-## Symbol n-grams
-
-## Encoding
-
-## Observations
-
-## Alphabets
-
-## Hafer shifts
-
-## Output graphs
-
-## Periodic analysis
-
-## Transposition matrix analysis
-
-## Compare input and output
-
-## Find vigenere keyword length
-
-## Find omnidirectional repeats
-
-## Find plaintext direction
-
-## Find encoding direction
-
-## Find perfect n-symbol cycles
-
-## Find n-symbol cycle types
-
-## Find n-symbol cycle patterns
-
-## Find sequential homphonic randomizations
-
-## Find post sequential homophonic row or columnar rearrangement
+Of the roughly 74 pages, 17 were solved within months of release in 2014; the remaining ~57
+have resisted the public for over a decade.
 
 ---
 
-# Notes, tips and tricks <a name="notes">
+## 2. The toolkit (materials and methods)
 
-## Scoring function
-
-The following description of AZDecrypt's scoring function comes from Jarl's 2021 HistoCrypt keynote presentation.
-
-Example cipher “INTHISEXJMPLECIPHERONLYJFEWOFITSLETTERSJRESUBSTITUTED”.
-
-The log frequencies of all the 6-grams in the cipher from “INTHIS” to “ITUTED” are summed. This sum is then divided by the number of 6-grams in the cipher and multiplied by the text’s entropy to get the score. The entropy is needed to keep the solver from converging to solutions that only use a few of the most common letters in the English alphabet (N-gram spaghetti).
-
-The solver works it way through a number of iterations and for every iteration, all instances of a symbol, change their assigned letter in attempt to improve the solution:
-
-Example cipher “INTHISEXAMPLECIPHERONLYAFEWOFITSLETTERSARESUBSTITUTED”. Letter J changed to letter A from example above.
-For speed, all of the cipher’s 6-grams do not need to be summed again. The score is updated only with the 6-grams that change. Such as “RONLYA”, “ONLYAF”, “NLYAFE”, “LYAFEW”, “YAFEWO”, “AFEWOF”.
-
-## Pangrams
-
-AZDecrypt was not able to solve this cipher with default settings:
-
-`ABC DEFGH IJKLM NKO PEQRS KTCJ U VUWX YKZ RUGH QX IKO LFAB NFTC YKWCM VFDEKJ PEZS`
-
-The plaintext consists of two pangrams:
-
-`THE QUICK BROWN FOX JUMPS OVER A LAZY DOG PACK MY BOX WITH FIVE DOZEN LIQUOR JUGS`
-
-Jarl's fix, under "Options -> Solvers":
-
-* Boost Entropy weight to 10
-* Click the "Normalize n-gram factor" button
-
-Now it can solve the cipher.
-
-## Batch mode
-
-In batch mode (processing multiple ciphers), under default settings, AZDecrypt will not write output files if newly cracked ciphers' scores are not higher than previously cracked ciphers' scores.  To change this, set "Output improvements only" to "No" in "Options -> Solvers"
-
-In v1.2, "Batch ciphers (non-substitution)" has been added to the File menu.
-
-## Solving "Ambiguous Caesar shift" ciphers (aka Hafer ciphers or Hafer homophonic ciphers)
-
-Instructions and details on configuring AZDecrypt to solve these kinds of ciphers [can be found here](https://zodiackiller.net/community/postid/78642/)  ([old broken link](http://zodiackillersite.com/viewtopic.php?p=81511#p81511))
-
-The description of the encipherment system [is here](http://zodiackillersite.com/viewtopic.php?p=81498#p81498).
-
-Jarlve posted a new version of AZDecrypt that can solve Hafer ciphers [here](http://zodiackillersite.com/viewtopic.php?p=81853#p81853).
-
-## Polyphone solver improvements
-
-Jarl has added improvements to the polyphone solver.  [Details here](http://zodiackillersite.com/viewtopic.php?p=81694#p81694).
-
-## Compute score for a given plaintext
-
-Select the "Non-substitution" solver.
-
-Before that feature was available, it was achievable like this: Use the "Substitution + crib grid" solver, click on Show cipher and then type in the letters of the plain text. Though you will have to leave one letter uncribbed for it to work.
-
-## Homophonic substitution with spaces
-
-Sometimes a homophonic substitution cipher will encode spaces with one or more symbols.  
-
-To solve it:  Go to File, Load n-grams, navigate to `AZdecrypt/N-grams/Spaces` and select "5-grams_english+spaces_jarlve_reddit".
-
-Before that method was available, one way was to select the Substitution + units solver with the standard settings, Unit: symbol, Mode: Remove and perhaps Multiplicity weight: 1.   [Thread](http://zodiackillersite.com/viewtopic.php?f=81&t=5059#p82408)
-
-## Using AZDecrypt to auto-insert spaces in input
-
-Sometimes you have a plaintext that lacks spaces and want to automatically add spaces between words (or what might seem like words).  Steps:
-
-* Put a plaintext into the Input window and go to Format, Add spaces to plaintext.
-* The spacing is based on the two letter 5-grams files inside the N-grams\Spaces directory.
-* Under Options, Solver options there are two settings related to it:
-    * (General) Add spaces to output
-    * (General) Add spaces to output iterations
-* It uses a small hill climber for the function so upping the iterations may improve quality slightly.
-
-Note: For this feature to work, n-gram stats that consist only of the letters A through Z must be loaded.  For example, any of the languages in the `Wortschatz` folder meet this condition.
-   
-# Release History <a name="releases"></a>
-
-## 1.25 - Jun 5, 2025
-
-https://drive.google.com/file/d/1A4qZRZZl-HWbHYnFpDaoVfU1dGI3RzTY/view?usp=drive_link
-
-
-New features/changes:
-
-- Improved shuffle.
-
-- Fixes here and there.
-
-- Improved Bigram substitution solver.
-
-- Experimental Neural network n-grams demo.
-
-- Generate n-grams from corpus (experimental and has issues).
-
-- Chi-squared test redesign.
-
-## 1.24 - Jan 1, 2024
-
-https://drive.google.com/file/d/1QNhckwpBdijDViCyW16H9uO_Smd30M41/view?usp=sharing (.exe only)
-
-New features:
-
-- Improved PRNG, more precise fast exponentiation, smart initialization, and better letter picking algorithm
-
-- Optimized static zlib increases n-gram loading speed by 30-50%
-
-- Approximately 1.25% more accurate solutions on benchmarks due to code improvements (largest for 7-grams and higher)
-
-- New beijinghouse n-gram files add additional 1-2% more accuracy due to increased input parameters [from 2TB -> 10TB]
-
-- New beijinghouse 8-gram file more accurate while only requiring 10.5GB ram (vs 16GB for prior versions)
-
-- Adds preliminary research support for 9-gram files [requires 88GB ram]
-
-Additional n-gram downloads:
-
-7-gram beijinghouse v7: https://drive.proton.me/urls/K4QQGAVKEC#SlyrIbgegH13 (0.90 GB download --  9.2 GB ram)
-8-gram beijinghouse v7: https://drive.proton.me/urls/A4X7P9X990#uZKoxvda51Fy (3.50 GB download -- 10.5 GB ram)
-9-gram beijinghouse v7: https://drive.proton.me/urls/E3FXCCVK5M#vZxvy1ZK94XN (15.4 GB download -- 88.8 GB ram)
-
-
-## 1.23 - Apr 13, 2023
-   
-https://drive.google.com/file/d/1zenlhOqsPs6s7XKMdk9IhL7IK6nO7vUQ/view?usp=share_link
-   
-New features:
-
-- Reduced per thread memory usage by 3/4.
-
-- Adapative sleep times for multi-threading. This should result in a small speed gain for most solvers and a few big gains here and there.
-
-- Start of a Double columnar transposition solver.   
-   
-## 1.22 - Feb 20, 2023
-
-https://drive.google.com/file/d/12ngl8-_hd7EvofHRKkNB7VtBNBceB2Tl/view?usp=share_link
-
-New features:
-
-- Ciphers up to 4000 characters long, up from 2000
-
-- Non-substitution Nulls and skips solver
-
-- Automatic word spacing and dedicated n-grams for the following latin alphabet languages: Danish, Dutch, English, Finnish, French, German, Italian, Portuguese, Spanish and Swedish
-
-- Chi-squared test for the languages above as well, (under Statistics)
-
-- N-gram tools to convert/output existing n-grams to text or binary format. Plus downscaling of existing n-grams, from letter 5-grams to letter 4-grams etc (under File, N-gram tools)
-
-- "Substitution + crib grid" can now be used in junction with "Substitution + simple transposistion". Have the pop-up windows of both solvers open and enable the "Use Substitution + crib grid" option in the Simple transposition solver window to have it work.
-
-- Homophone weight setting (under Settings, Solver settings) that works for all solvers that output the number of homophones in the Output window, and the latter being a new addition as well.
-
-- Added some error checking for loading n-grams, possible problems will show up as *** WARNINGS ***
-
-- Lots of bugfixes, small additions and improvements
-
-## 1.21 - Apr 23, 2022
-
-## 1.20 - Mar 28, 2022
-
-https://drive.google.com/file/d/1gfdgnbuntedRPyG472QekZo-bImGR3D6/view?usp=sharing
-
-Added a whole bunch of transpositions solvers that operate on non-subsitution ciphers:
-
-Non-substitution (scores your plain text + detailed n-gram stats)
-Columnar transposition (keyed)
-Columnar rearrangement (keyed)
-Grid rearrangement (keyed)
-Periodic transposition (can solve a whole variety of transposition ciphers keyed or unkeyed as long as the transposition can be summarized by a limited set of periodic rules)
-Simple transposition (the same solver as the Substitution + simple transposition but does not perform substitution)
-
-Also File, Batch ciphers (non-subsitution) has been added.
-
-Additional n-gram downloads:
-
-7-gram beijinghouse v6: https://drive.google.com/file/d/1lvh3Ih_P9OShWzQVub7wsTk8f1YtLQg8/view?usp=sharing (420 MB download)
-8-gram beijinghouse v6: https://drive.google.com/file/d/1v9xvmKQoARyerV2lIK3tphdeGiw_JmZ7/view?usp=sharing (5 GB download)
-
-## 1.19 - Nov 11, 2020
-
-https://drive.google.com/file/d/1_lP82NAvj5-vzd8O33e5aggWViHd-THJ/view?usp=sharing
-
-What's new?
-
-- Spacing between words for English text is now added to the solutions but can be disabled through Options, Solvers, Add spaces to output: No. You can also add spaces to text via the Input window and then Format, Add spaces to plaintext.
-- Solvers Substitution + polyphones [auto] and [user] have been merged into Substitution + polyphones. Using the solver will open up a new menu that includes all the old functionality and more plus a new Hafer shifts solver mode!
-- In previous versions results were not output until the thread was completely finished and that resulted in a possible wait time on very long runs. That's no longer the case.
-- The solvers that use a additional hill-climber on top now update the Output window every second and the best result is now persistent between restarts.
-- Re-enabled the 7-gram functionality. beijinghouse v6 7-grams download: https://drive.google.com/file/d/1lvh3Ih_P9OShWzQVub7wsTk8f1YtLQg8/view?usp=sharing (418 MB)
-- Very noteworthy across-the-board improved solver efficiency.
-- Size reduced beijinghouse v6 5 and 6-grams included.
-
-Example output with the new word spacing (not perfect but pretty good):
+`cicada` is a few hundred lines of C++ with no external dependencies. It reads the same rune
+files used by the community [2] and provides:
 
 ```
-Score: 24636.42 IOC: 0.0589 Multiplicity: 0.1882 Seconds: 0.12
-Repeats: ANALYS CIPHER COULD MEAN TOBE LESS AND YST THE
-PC-cycles: 490
-
-ALTERNATIVELY AND FAR LESS GLORIOUSLY THE 
-CIPHERS COULD BE THE BACKLASH OF A LUCKY 
-LOW DOWN CRIMINAL WITH A TEXTBOOK ON HOW 
-TO BEAT FREQUENCY ANALYSIS THE FIRST CIPHER 
-WAS SOLVED BY A HUSBAND AND WIFE TEAM OF 
-A MATEUR CRYSTANALYSTS OUT OF THEIR HOME 
-AN ANNOYED KILLER COULD HAVE TAKEN THE RECIPE 
-FOR CODE MAKING AND BE GUN CONVOLUTING IT 
-UNTIL IT BECAME MEANING LESS ENOUGH TO BE 
-UNBREAKABLE I FIND THE LATTER SOME
+cicada translit <file>     runes -> Latin (+ gematria sum)
+cicada stats    <file>     rune frequencies + Index of Coincidence
+cicada decode   <file> <atbash|caesar|vigenere|totient|primes> [args]
+cicada vigcrack <file> ...  annealed Vigenère-key search (hypothesis tester)
+cicada subsolve <file> ...  29-symbol substitution hillclimb (hypothesis tester)
+cicada selftest / cracktest validation on known answers
 ```
 
-## 1.18 - Jul 12, 2020
+The toolkit is **validated on known answers**. `selftest` reproduces the published *A Warning*
+transliteration exactly, and `cracktest` encrypts known English-in-runes under a hidden key and
+confirms that the search recovers it. This matters methodologically: a search tool that cannot
+be trusted on a known case carries no weight on an unknown one.
 
-https://drive.google.com/file/d/1v0nyazUTqFGKse8qAoi2FYeQASqRz152/view?usp=sharing
+---
 
-I made a huge effort to simplify the program in many ways and the overlapping n-gram systems have been removed. And thus, old n-grams may no longer work and 7-grams have been removed in favor of 8-grams. N-gram sizes 2 to 6 use the default system and n-gram size 8 uses beijinghouse's system.
+## 3. Reproducing the solved pages (positive controls)
 
-- New beijinghouse and reddit n-grams.
-- Binary n-gram file format which results in much smaller files and faster loading times.
-- 8-grams will dynamically load into memory to the constraints of the system and will work even with as little as 1 GB of free RAM. Under "Options, Solvers" a setting can be found to force the 8-grams to a certain memory size.
-- 8-gram caching, a setting under "Options, Solvers" will increase speed by up to 30% at the cost of more RAM and some warm-up time.
-- In general almost all solvers have a 2x to 8x efficiency increase resulting in much faster solve times for all ciphers.
-- The "simple transposition" solver has support for batch solving. (suggested by doranchak)
-- Higher-order homophonic solver.
-- Monoalphabetic groups solver (for Nick Pelling's challenge ciphers, idea and concept by beijnghouse: https://ciphermysteries.com/2020/01/07/nicks-challenge-cipher-1-cracked-by-louie-helm)
-- Batch ciphers bigram repeats filter under "Options, Solvers"
-- Load n-gram bias now supports files up to 10 MB.
-- Performance mode removed.
-- Bug fixes.
+### 3.1 *A Warning*: Atbash
 
-Download 6-grams_english_beijinghouse_v6: https://drive.google.com/file/d/1aXzSQoBcQ9MXD5fcH3jvq6UbqpU3GXaQ/view?usp=sharing (200 MB)
-Download 8-grams_english_beijinghouse_v6: https://drive.google.com/file/d/1v9xvmKQoARyerV2lIK3tphdeGiw_JmZ7/view?usp=sharing (5 GB)
-Download 8-grams_english_jarlve_reddit: https://drive.google.com/file/d/1V1N0dp8iMoT0f7fz62eAvYAaOJVvLq52/view?usp=sharing (1.2 GB)
-
-## 1.17 - Dec 25, 2019
-
-https://drive.google.com/open?id=1Sw0P9N9svMlx4QNtObZ56vEtDJHk6sZ8
-
-What's new?
-
-- Version 5 of beijinghouse's fantastic n-grams. His 8-grams as a separate 5 GB download: https://drive.google.com/open?id=1eDrhQMqL-jak1_Gvlij42sQUXkky1AY8
-- New solver "Bigram substitution + crib grid" (which broke Klaus' 750 and 1000 world record challenges using beijinghouse's 8-grams).
-- New solver "Substitution + row bound fragments" (idea by smokie treats).
-- Improved convergence especially for hard ciphers, up to 5x faster solve.
-- New Statistic "Observations" which automatically outputs some general observations (to be improved upon).
-- Improved "Batch settings" functionality (suggested by beijinghouse).
-- Start of a Linux harness (suggested by beijinghouse).
-- Source now included with program.
-- New Reddit n-grams version 1907.
-- Fixes here and there.
-
-Important note: I changed all normal n-grams (non-beijinghouse) to 1-byte log values. If you have any old n-grams from sizes 2 to 6 then you need to change the n-gram .ini file from "N-gram size=5" to "N-gram size=old5" to get it to work again.
-
-## 1.16 - Oct 8, 2019
-
-https://drive.google.com/open?id=1vB1G8IAeelsz6mZU6chQ7azthSv8seky
-
-What's new?
-
-- Version 4 of beijinghouse's 6-grams and 7-grams included which use a special low memory no-compromise n-gram system. For example, beijinghouse's 7-grams only take up 2 GB of ram and can thus be used on 4 or 8 GB system. His new version 4 n-grams are also much more dense and boast ridiculously good convergence rates. Version 4 of beijinghouse's 8-grams are available as a separate 4 GB download and require a 24 GB RAM system: https://drive.google.com/open?id=1vB1G8IAeelsz6mZU6chQ7azthSv8seky Thank you beijinghouse for all your work on this!
-
-- Added timer to solver output so that the user knows how much time to program took to arrive at a certain solution.
-- Added the option the add the PC-cycles stat the solver output "(General) Add PC-cycles to file output format".
-- Fixed IOC inflation bug with Row bound solver that happened with certain ciphers.
-- Fixed bug with Vigenère solver when using entropy weight other than 1.
-- Fixed possible crash with Batch settings.
-- Minor bug fixes and improvements all over the place.
-- Compiled with the new FreeBASIC 1.07.1 release.
-
-## 1.15 - May 25, 2019
-
-https://drive.google.com/open?id=1YOBOXIz6ElHd5ej48E-FA7z7FYJsVuVg
-
-Again a huge update and I will illustrate some examples of the new functionality during the next days.
-
-- beijinghouse made a special 8-gram system that is only 50% slower than 7-grams and uses only 8 GB of memory! It works very well and he can elaborate on how exactly he achieved this. Get his 8-grams here: https://drive.google.com/open?id=1oIHa67MUJEABCF6RpRVo_JISz5nLU94c You will still need about 12 GB of ram to use these.
-- beijinghouse also came up with a speed optimization that aborts the n-gram score calculation when it is known that the new_score cannot be higher than the old_score. This works very well with sparse n-grams such as 7-grams or higher. For now it is only used with beijinghouse's 8-grams.
-
-- Added extensive cipher and plain text library, it can be found in the "Ciphers/" folder.
-- Internally the score calculation is now using entropy instead of the index of coincidence. This may change the scores you are used to seeing a little bit. A small adjustment to the n-gram ini files has been made to reflect this. Old ini files still work via internal conversion.
-- You may notice a slowdown of the solving speed (about 20%) due to a big improvement to most of the solvers such that for example 500,000 iterations are now worth about 1,000,000 iterations with a greater effect on ciphers that tend to get stuck.
-- New function "Bias n-grams", bejinghouse asked for this, it can be found under "File, Load n-gram bias" and it tunes the n-grams in memory to some text of your choice. For example: to offer support for rare occurring n-grams such as names.
-- "Batch ciphers (substitution)" now supports plain text accuracy testing, a example can be found in the "Ciphers/Batch/" folder.
-- New solver "Substitution + units", it allows to solve a variety of cipher schemes such as masootz's cipher or operations on symbols, rows or columns such as remove, expand, separate into 2nd key, replace and reverse.
-- New option "(Substitution + sequential homophones) Sequential weight: 5", setting it lower will decrease the weight of the sequential homophones and setting it higher will increase it.
-- New function "Normalize n-gram factor", the button can be found under "Options, Solvers" and it will normalize the n-gram factor to some internal plain text. This ensures that AZdecrypt performs optimally with your n-grams.
-- Fixed major 1.14 issues with the following solvers: columnar transpostion & rearrangement, nulls and skips, and poly [auto, user].
-- Removed many code redundancies in the source (merged solvers etc) and it is about 33% smaller.
-- New function "Batch settings" to optimize temperature etc, suggested by beijinghouse.
-- Solvers are using much less memory outside of the regular n-gram memory use.
-- Vigenère solver works much better now.
-
-beijnghouse's new 7-grams: https://drive.google.com/open?id=1NFV-Ph6xJUsfwA8f3dGMzR35wlL47CFC
-
-## 1.14 - Mar 24, 2019
-
-What has changed?
-
-First of all a big thank you to beijinghouse for his code contributions:
-
-- beijinghouse recoded the loading routine and it is now loads n-grams up to 20 times as fast! It also supports loading n-gram files directly from .gz files.
-- beijinghouse also made some speed optimizations to the variable types, random number generator and IOC calculations of the solver and this sped up the solvers by up to 10%.
-- beijinghouse excellent all-around 6-grams are included with the download. I like to see these as a 6-gram version of the Practical cryptography 5-grams.
-- Download link to beijinghouse's 7-grams: https://drive.google.com/open?id=1eEWCO0ABE72WV4YEbwQou-29c2ijw3_f
+The first page is the 29-rune alphabet reversed (index → 28 − index):
 
 ```
-is there how to rearrange varies columns at the same time ??! I say, for example, use an argument as 3,2,4,7,8,10,17,1,5,6,9,11,12,13,14,15,16.
+cicada decode 0_warning.txt atbash
 ```
+> A WARNING. BELIEVE NOTHING FROM THIS BOOK. EXCEPT WHAT YOU KNOW TO BE TRUE.
+> TEST THE KNOWLEDGE. FIND YOUR TRUTH. EXPERIENCE YOUR DEATH. DO NOT EDIT OR
+> CHANGE THIS BOOK, OR THE MESSAGE CONTAINED WITHIN, EITHER THE WORDS OR THEIR
+> NUMBERS. FOR ALL IS SACRED.
 
-- @ Marclean: added, go to Functions, Transposition and look for Rearrange columns or rows. In the A1 "key#" field enter a key such as you described separated by commas or spaces.
+(BOOC→BOOK, CNOW→KNOW, BELIEUE→BELIEVE from the C/K and U/V ambiguity.)
 
-```
-The text in the input window is now transposed correctly. If you now click on "Solve", the cipher will still be solved. Apparently the previously loaded cipher is still stored somewhere. If you copy the transposed cipher and insert it again, "Solve" does not lead to any result anymore (as desired). Something is obviously not updated correctly.
-```
+### 3.2 *An End* (p56): totient key-stream
 
-- @ Largo: issued, this was actually part of some hidden functionality which is now disabled.
-- Renamed the "Substitution + transposition" to "Substitution + simple transposition" and added an interface. All transposition operations that have a smaller set of possible arguments will be housed here. Added Spiral and L-route transpositions as well as Largo's Split transposition idea:
-
-```
-I've added this transposition to my solver for the next AZdecrypt release. It has solved your cipher and no results on the 340 so far. It can pick any set of dimensions and then make a horizontal or vertical split at any offset of which each part could have its own transposition (none, mirrored, flipped, columnars, diagonals).
-```
-
-- Improved "Substitution + row bound" solver.
-- Improved the solve rate of mostly all solvers a bit.
-- Added solver "Substitution + crib list" by request of beijinghouse. Go to the Misc folder and look to the readme.txt for an explanation. It basically allows you to batch cribs at the positions of your choosing.
-- Included a new build of my Reddit n-grams. These are great when first-person language is expected such as the Zodiac communications.
-- Fixed issue with status display. MIPS is now more accurate. Also added the average IOC.
-- Compiled with the new 2019 FreeBASIC 1.06.0 release.
-- Many bug fixes. New source can be found in: https://drive.google.com/open?id=0B5r0rDAOuzIQd0p1NmljRWJvYkU
-
-Updated the readme.txt with added names of the people that have helped me over the years plus some links to other people's work. Let me know if I have forgotten you!
-
-## 1.13 - Jan 1, 2019
-
-What is new?
-
-- Crib grid solver. This allows some very basic cribbing functionality.
-- Pause button that works with all solvers.
-- Refurbished menus and statistics.
-- Bug fixes.
-
-The statistics may use sigma's here and there, that is, the amount of standard deviations something is away from the mean. These will however likely not convert properly to the odds usually associated with them. They are there to give a quick indication only.
-
-## 1.12 - Nov 03, 2018
-
-What is new?
-
-- Optimized "nulls and skips" solver with the help of smokie treats.
-- Updated Reddit n-grams. This however increased the download to about 560 megabytes.
-- Much faster Solver performance mode, which can be toggled on or off from the Options menu.
-- Fixed an issue with the "row bound" solver so that it now correctly displays the "N-grams" and "PC-cycles" statistics scores.
-- AZdecrypt determines the number of CPU threads available to your system and automatically assigns 3/4 of it to the solvers. The number of CPU threads can still be changed through the Options, Solvers menu.
-- Support for up to 65536 CPU threads.
-- Slightly overhauled look and feel.
-- Fixed lots of small issues.
-
-## 1.11 - Apr 7, 2018
-   
-What is new?
-
-- Improvements to the substitution solver.
-- Some of the Stats 1 and Stats 2 are improved.
-- The program should no longer crash after exiting on some systems.
-- New solver, Substitution + columnar rearrangement. Solves rearrangements of columns. The amount of columns and more can be set via Options, Solver, (Substitution + columnar transposition & rearrangement) ...
-- New solver, Substitution + columnar transposition. Solves keyed columnar transposition. The amount of columns and more can be set via Options, Solver, (Substitution + columnar transposition & rearrangement) ...
-- New solver, Substitution + period + nulls & skips. Solves unkeyed columnar transposition with nulls & skips. Similarly, its settings can be found via Options, Solvers, (Substitution + period + nulls & skips) ...
-- Added a Misc directory with a file trithemius.txt, this can be used in conjunction with the Substitution + vigenère wordlist solver to crack trithemius ciphers.
-- Added a Versions directory which houses versions that have been compiled to work faster on newer CPU architectures.
-- Added a Benchmark which can be found via Options, Benchmark.
-- Solver performance mode. Up to 40% faster solvers but only works with English ngrams. Enabled via Options, Toggle solver performance mode. If the toggle is successful this message should appear:
+Here the key-stream is φ(pₙ) = pₙ − 1 for the n-th prime, taken mod 29 and subtracted from the
+text:
 
 ```
-5-gram solver performance mode enabled, supported:
---------------------------------------------------------
-- Substitution
-- Substitution + columnar rearrangement
-- Substitution + columnar transposition
-- Substitution + period + nulls & skips
-- Substitution + transposition
-- Batch ciphers (substitution)
+cicada decode p56_an_end.txt totient
 ```
+> AN END. WITHIN THE DEEP WEB, THERE EXISTS A PAGE THAT HASHES TO …
 
-And the ngram file should have a [PM] next to it:
+### 3.3 *The Loss of Divinity*: not a cipher at all
+
+This page is a useful reminder not to assume encryption. Its Index of Coincidence is **0.0612**
+(English-level, not random), and the raw transliteration is already plain English:
 
 ```
-Task: none
-[PM] 5-grams_english_practicalcryptography_wortschatz.txt
---------------------------------------------------------
-Can be auto-enabled via Options, Solver, set (General) Use performance mode ngrams if applicable to 1.
+cicada translit 0_loss_of_divinity.txt
+```
+> THE LOSS OF DIVINITY. THE CIRCUMFERENCE PRACTICES THREE BEHAVIOURS WHICH CAUSE
+> THE LOSS OF DIVINITY. CONSUMPTION: WE CONSUME TOO MUCH … PRESERVATION … ADHERENCE …
+
+There is nothing to "solve": the page is a direct rune transliteration.
+
+### 3.4 *Welcome*: Vigenère (key DIVINITY), with a caveat
+
+Vigenère with the key `DIVINITY` decrypts the opening correctly (`WELCO…`) and then drifts,
+because the page employs a documented **interrupter / skip rule** at specific indices (the key
+pauses at certain ᚠ positions). Modelling *every* ᚠ as an interrupter is close but not exact.
+This is a reminder that these pages hide small, deliberate structural rules.
+
+### 3.5 Frequency fingerprint of the solved corpus
+
+A useful sanity check: if the solved pages are genuinely English, their letter and word
+statistics should resemble English. Pooling all nine solved plaintext pages (2,979 runes,
+727 words) gives exactly that.
+
+**Letter (rune) frequency** tracks English closely:
+
+```
+solved top-8 runes :  E  O  A  S  T  R  I  N
+typical English    :  E  T  A  O  I  N  S  H  R
 ```
 
-## 1.09 - Dec 5, 2017
-   
-What is new?
+`E` is the most common symbol in both, at 12.8% here versus ≈ 12.7% in English, and the rest of
+the ranking lines up. The rare tail (X, J, AE) mirrors English's rare letters. Full
+distribution:
 
-- Slightly improved substitution solver.
-- Batch ciphers (substitution) is faster when processing ciphers with a reasonably low number of iterations and restarts.
-- The vigenère solver can be set to solve by rows under the options, solver menu by changing by columns to 0.
-- Fixed a bug where the 7-gram substitution solver was erroneously linked to a polyalphabetic solver.
-- Fixed a bug with the 6-gram vigenère solver.
-- Added some stats and various other bugfixes.
+| rune | E | O | A | S | T | R | I | N | U | D | TH | L | W | C | H | Y | M | F | … |
+|------|---|---|---|---|---|---|---|---|---|---|----|---|---|---|---|---|---|---|---|
+| %    |12.8|8.6|7.3|6.7|6.6|6.4|6.2|6.1|5.1|3.9|3.9|3.7|3.3|3.1|3.0|2.7|2.6|1.6| … |
 
-## 1.08 - Sep 7, 2017
-   
-What is new?
+![Rune frequency across the solved corpus](assets/freq_letters.png)
 
-- New solver: Substitution + polyphones [auto]. It can solve wildcard ciphers automatically and more. The number of extra letters to use can be changed via the options menu. I recommend that you use 6-grams and a multiplicity weight of 1 or lower/higher. This multiplicity weight ensures that the solver uses as few extra letters as possible.
-- Renamed the Substitution + user defined polyphones solver to Substitution + polyphones [user].
-- Improved solver: Substitution + transposition and added some options to alter.
-- New solver: Merge seq. homophones with options to alter. Works very well on sequential homophonic substitution ciphers without much encoding randomization.
-- Added option: (General) output to batch. Will output all solutions of a solver in a file instead of many when set to 1.
-- Added option: (General) output additional stats. Ngram score of solution and plaintext to ciphertext cycles score.
-- Slightly improved n-gram loading times.
-- Improved options menus.
-- Bugfixes.
+**Word frequency** recovers the English function-word skeleton:
 
-## 1.07 - Aug 5, 2017
-   
-What is new?
+```
+THE 45 · TO 24 · YOU 22 · IS 22 · A 19 · WE 19 · ARE 18 · AND 15 · THAT 14
+WHO 13 · NOT 13 · YOUR 12 · MASTER 11 · WHAT 10 · OF 9 · BE 8 · THIS 7 · ALL 7
+```
 
-- Substitution + null symbols solver. It decrypts ciphers were a bunch of symbols are to be removed, assuming that every instance of that symbol needs to be removed.
-- The Stats menu has been split into Stats and More stats.
-- Encoding randomization tests have been added to More stats, it attempts to find sections of randomization in sequential homophonic substitution ciphers.
-- Stats options has been added to the options menu. It allows to change some settings that pertain to the encoding randomization and plaintext/encoding direction tests.
-- 2 and 3-symbol cycles output with details has been added to More stats.
-- Renamed the Substitution + by rows solver to Substitution + row bound.
-- Various other updates and bug fixes.
+![Most common words in the solved corpus](assets/freq_words.png)
 
-## 1.06 - Jul 20, 2017
-   
-What is new?
+(THNGS = THINGS and HAUE = HAVE reflect the Gematria conventions, not errors.) The pooled
+**IoC is 0.0614**, well above the 29-symbol random floor of 0.0345 and just under 26-letter
+English's 0.0667, precisely where real English spread across 29 runes should land. This serves
+as the positive control: the toolkit's "solved" output is statistically indistinguishable from
+ordinary English, which is exactly what the unsolved pages (Section 4) fail to show.
 
-- Substitution + light polyalphabetism solver. It aims to decrypt homophonic substitution + up to about 20% polyalphabetism/randomization considering 408/340 multiplicity. Using 6-grams is recommended and take in mind that this solver converges very slowly on the solution. You could let it run overnight.
+---
 
-There is a new setting (match weight) under the solver options menu, this will let you control how much polyalphabetism it targets. Which is indicated with the solutions the solver returns. For example, the solver might return a solution that includes "Match 0.80123". This means that 80.123% of the plaintext correctly matches the ciphertext and that the other 19.877% is freely assigned by the solver. Increasing the match weight (under the solver options menu) will force the solver to higher match ratios while decreasing it allows for more polyalphabetism.
+## 4. The unsolved pages, and the Index of Coincidence as a triage tool
 
-- Renamed Substitution + polyphones solver to Substitution + user defined polyphones.
-- Various other updates and bug fixes.
+### 4.1 A primer on the Index of Coincidence
 
-## 1.05 - Jun 15, 2017
-   
-What is new?
+The **Index of Coincidence** (IC or IoC), introduced by Friedman in the 1920s [1], is the
+probability that two symbols drawn at random from a text are the same letter. It is computed
+from the symbol counts `nᵢ` over an alphabet of size `c`, with `N` symbols total:
 
-- Substitution + by rows solver. Concept by smokie treats; It does not cross row boundaries and uses a combination of ngram sizes to compensate for the loss of information.
-- Support for CTRL-A in the input and output windows.
-- Some new stats and bugfixes.
-   
-## 1.04 - Apr 29, 2017
-   
-What is new?
+```
+IC = Σ nᵢ(nᵢ − 1) / [ N(N − 1) ]
+```
 
-- Substitution + vigenère solver. Set a keyword length size in the solver menu under options.
-- Substitution + vigenère wordlist solver. Will simply go through all words in a list and could double as a one time pad solver. Words in the list must use the same alphabet as defined in the ngram .ini file (case sensitive).
-- Vigenère encoder. Under functions -> manipulation.
-- Digraph subtitution encoder. Under functions -> manipulation.
-- Added a few extra stats here and there such as odd/even bigrams. (thanks smokie)
-- Added undo button to create transposition matrix.
-- Easier to navigate menus with spacers.
-- Bugfixes and many little things. (thanks again Largo)
+The useful property is that natural language is *lumpy*: a few letters (E, T, A …) are very
+common, so two random draws land on the same letter more often than pure chance. The reference
+values for the ordinary **26-letter English** alphabet are:
 
-The substitution + vigenère solver can solve 63 symbol 340 character homophonic substitution + vigenère ciphers with keywords up to a length of 10 (and probably much longer) without any problems but it may take a while. With homophonic substitution it is assumed that the vigenère is actual at the plaintext level. The solver is _very much_ susceptible to nulls.
-   
-## [1.03 - Apr 17, 2017](https://zodiackiller.net/community/postid/52032/)
+| text | IC |
+|------|----|
+| English prose | **≈ 0.0667** (commonly quoted in the 0.0667–0.0686 range) |
+| uniform random over 26 letters | 1/26 ≈ 0.0385 |
 
-What is new?
+English is therefore almost **1.75×** as "coincidental" as random noise. That gap is what makes
+the IC a cheap and powerful first test.
 
-- Support for 4, 7 and 8-grams added
-- Substitution + polyphones solver
-- Create transposition matrix
-- Bugfixes and stuff
+Two caveats matter for the *Liber Primus*. First, the classic 0.0667 figure is specific to a
+**26-letter** alphabet; the Gematria Primus has **29 symbols**, which spreads the probability
+thinner and lowers every baseline. For 29 symbols, uniform random is 1/29 ≈ **0.0345**, and
+real English written in the 29 runes measures lower than 0.0667 as well (the plaintext *Loss of
+Divinity* page comes in at **0.0612**). Second, and crucially: the IC is **invariant under
+monoalphabetic ciphers** (Atbash, Caesar, and simple substitution merely relabel the symbols,
+leaving the counts `nᵢ` untouched), but it **collapses toward the random baseline under
+polyalphabetic or running-key ciphers**, which smear each plaintext letter across many
+ciphertext symbols. That single number therefore indicates *which family* of cipher one may
+even hope for, before any CPU time is spent.
 
-The amount of polyphones/letters per symbol for the new substitution + polyphones solver have to be set through the symbols menu (under functions).
+### 4.2 Results on the full unsolved corpus
 
-The new create transposition matrix (under functions) requires you to open a cipher with the dimensions you want to create a matrix in first. Then left mouse click on the button-grid to set a number one by one, it increments automatically. A right mouse click draws (when possible) a horizontal, vertical or diagonal line between the last number and your new position. 
-   
-## 1.0c - Mar 7, 2017
-   
-- Bug fixes.
-- Faster solver.
-- Wider window.
-- Added new stats and format options.
-- Added demo version of a transposition solver, let it run for a very long time.
-   
-## 1.0b - Jan 27, 2017
-   
-- Bug fixes.
-- Added symbols menu.
-- Added and improved stats.
-- Added transposition schemes.
-- Changed and moved some stuff, if you can't find something please ask.
-- Added "Batch ngrams" under File. Open "languages.txt" under "/Ngrams/Languages/" for example functionality.
+| page group | runes | IoC | periodic-Vigenère + substitution search |
+|------------|------:|-----:|:--|
+| p0-2   | 729  | 0.0341 | no English |
+| p3-7   | 1145 | 0.0346 | no English |
+| p8-14  | 1729 | 0.0345 | no English |
+| p15-22 | 1903 | 0.0345 | no English |
+| p23-26 | 1021 | 0.0343 | no English |
+| p27-32 | 1433 | 0.0342 | no English |
+| p33-39 | 1680 | 0.0344 | no English |
+| p40-53 | 3008 | 0.0345 | no English |
+| p54-55 | 308  | 0.0338 | no English |
 
-If there are any issues please let me know and I will fix them asap. Marclean, your transposition idea can be found under Functions -> Transposition -> Offset rectangular chain.
+**Every unsolved page sits on the random baseline.** This is a strong and informative negative
+result: the statistics are flat, so there is no periodic key or monoalphabetic mapping to
+recover. The substitution hillclimber degenerates to smearing everything onto a couple of
+common runes (`SSESSEE…`), the textbook failure mode on near-random input, and the Vigenère
+search returns gibberish at every key length.
+
+This is not a limitation of the tool; it is the tool reporting the truth. The solved pages used
+*simple* ciphers and left *detectable* structure. The unsolved pages left none, consistent with
+a non-repeating key-stream (or something stronger), precisely the class these attacks cannot
+break, and precisely why no one has broken them.
+
+### 4.3 Ranking every page by predicted difficulty
+
+Sorting all pages by IoC gives a difficulty forecast for *statistical* cryptanalysis. The
+ranking validates itself: every page it labels easy was in fact solved, and every flat page
+among the numbered ranges is unsolved.
+
+![Liber Primus pages ranked by predicted difficulty](assets/difficulty.png)
+
+| tier | pages | reading |
+|------|-------|---------|
+| **Easy** (IoC > 0.055) | `0_koan_1`, `0_warning`, `p57_parable`, `0_loss_of_divinity`, `jpg229` | monoalphabetic or plaintext; all solved |
+| **Medium** (~0.05) | `0_wisdom` | some structure; solved |
+| **Hard** (~0.04) | `0_welcome`, `jpg107-167` | near-random; solved by *key/insight*, not statistics |
+| **Hardest** (flat ~0.034) | `p3-7`, `p40-53`, `p15-22`, `p8-14`, `p33-39`, `p23-26`, `p27-32`, `p0-2`, `p54-55` | polyalphabetic/running-key; all unsolved |
+
+**An essential caveat.** Difficulty here means *resistance to statistical attack*, not
+unsolvability. Consider `p56_an_end`: its IoC (0.0325) is the lowest of all, yet the page is
+**solved**, because the totient key-stream was *deduced*, not found statistically. The same is
+true of `0_welcome` (solved with the key DIVINITY). A flat page is immune to `vigcrack` and
+`subsolve`, but not to someone who finds the right key, stream, or crib. The unsolved pages all
+sit in that flat bucket: statistically opaque, awaiting an insight rather than more compute.
+
+#### Case study: why *An End* ranks last yet is solved
+
+The sharpest illustration is `p56_an_end`, the page with the lowest IoC of all (0.0325) and
+also one of the solved pages.
+
+| | length | IoC |
+|--|-------:|----:|
+| ciphertext (what the ranking sees) | 85 runes | 0.0325 |
+| plaintext (after solving) | 85 runes | 0.0700 |
+| random text, 85 symbols over 29 | | mean 0.0344, std 0.0030 |
+
+Two effects stack. First, *An End* uses a **non-repeating key-stream** (φ(prime) = prime − 1,
+mod 29): every position receives a different shift, so the frequencies are smeared toward
+uniform. The plaintext's own IoC is a thoroughly English **0.0700**, but the cipher hides it
+completely. Second, at only **85 runes** the IoC has a large sampling spread (std ≈ 0.0030):
+0.0325 is just **0.64 standard deviations** below the random mean, and roughly **29% of
+genuinely random texts** score at or below it. The ciphertext is, for practical purposes,
+statistically indistinguishable from noise.
+
+It was solved nonetheless, because its key-stream, though non-repeating, is a simple
+**deterministic, guessable formula** (totients of primes, a motif Cicada used throughout) that
+a human could deduce. That is the real divide among the flat pages: *An End*'s stream was
+guessable; the unsolved pages' streams are not, or their keys have not been found. A flat IoC
+says "statistics will not help here." It says nothing about whether an insight will.
+
+Among the unsolved pages the IoC differences are noise-level (0.034–0.0346), so ranking them
+against each other is low confidence. If forced: `p40-53` (3,008 runes, the most material and
+the most repeated 4-grams) is the best place to test a new hypothesis, and `p54-55`
+(308 runes, flattest, no repeats) the least promising.
+
+---
+
+## 5. Structure probes and a number-theoretic key-stream search
+
+Section 4 showed that the simple attacks fail. Two more principled approaches confirm *why*,
+and one of them doubles as a positive control demonstrating that the pipeline is sound.
+
+### 5.1 Structure probes
+
+Beyond the single-symbol IoC, four inexpensive probes test for any exploitable regularity:
+
+- **chi-squared vs uniform**: is the single-symbol distribution actually flat?
+- **digraphic IoC**: do adjacent pairs repeat more than chance (ratio 1.0 = random)?
+- **autocorrelation / Kasiski**: is there a repeating period (reported as a z-score)?
+- **zlib compressibility vs random**: is there any redundancy a compressor can exploit?
+
+Run across the corpus, they behave like a calibrated instrument. The plaintext control page
+responds on every probe; every unsolved page sits at the random baseline.
+
+| page | IoC | chi²z | digraphic IoC | best period (z) | compress vs random |
+|------|----:|------:|--------------:|----------------:|-------------------:|
+| *Loss of Divinity* (plaintext control) | 0.0612 | **78.1** | **5.55×** | d=37 (**z=8.0**) | **0.76×** |
+| p0-2   | 0.0341 | −1.1 | 0.99× | d=35 (z=3.8) | 1.00× |
+| p3-7   | 0.0346 |  0.7 | 1.03× | d=29 (z=1.9) | 1.00× |
+| p8-14  | 0.0345 | −0.1 | 0.99× | d=24 (z=1.9) | 1.00× |
+| p15-22 | 0.0345 |  0.1 | 1.04× | d=5  (z=2.6) | 1.00× |
+| p23-26 | 0.0343 | −0.8 | 0.94× | d=38 (z=2.5) | 1.00× |
+| p27-32 | 0.0342 | −1.6 | 0.97× | d=58 (z=1.9) | 1.00× |
+| p33-39 | 0.0344 | −0.8 | 1.04× | d=6  (z=3.1) | 1.00× |
+| p40-53 | 0.0345 |  0.7 | 1.03× | d=58 (z=1.6) | 1.00× |
+| p54-55 | 0.0338 | −0.8 | 1.16× | d=45 (z=2.7) | 1.00× |
+
+The control shows digraphic IoC 5.6× random, chi² z = 78, a period spike at z = 8, and
+compresses to 0.76×. Every unsolved page shows digraphic IoC within a few percent of 1.0×,
+chi² |z| < 2, no period above z ≈ 4 across 60 lags (as expected under multiple testing on random
+data), and no compressibility beyond random. There is no monographic, digraphic, periodic, or
+redundancy structure to exploit.
+
+### 5.2 A number-theoretic key-stream search
+
+The flat statistics point to a key-stream cipher, and the solved pages reveal Cicada's taste
+for primes and totients. The natural attack is therefore to brute-force a library of
+deterministic integer sequences as key-streams (mod 29), both adding and subtracting, over
+small offsets, scoring each decrypt with a rune 4-gram model. The library comprises: primes,
+φ(prime), φ(n), Möbius μ, divisor count τ, σ, Fibonacci, Lucas, triangular numbers, squares,
+Trithemius `n`, prime gaps, Thue-Morse, and the digits of π.
+
+**Positive control.** The search rediscovers *An End* with no hints. `totient(primes)`,
+subtract, offset 0 gives IoC **0.0552** and the text:
+
+```
+ANENDWITHINTHEDEEPWEBTHEREEXISTSAPAGETHA...   ("AN END, WITHIN THE DEEP WEB, THERE EXISTS A PAGE THAT...")
+```
+
+Its 4-gram score is **−12.1** per window, cleanly separated from noise. That separation is what
+makes the negative results trustworthy.
+
+**Against the unsolved pages: nothing.** The best candidate for every page scores around
+**−14.6** (versus *An End*'s −12.1), leaves IoC at the random ≈ 0.034, and reads as gibberish.
+
+| page | best stream | score | IoC | verdict |
+|------|-------------|------:|----:|---------|
+| p56_an_end (control) | totient(primes) | **−12.1** | **0.0552** | **recovered** ✓ |
+| p0-2   | primes          | −14.6 | 0.0344 | no |
+| p3-7   | n (Trithemius)  | −14.6 | 0.0345 | no |
+| p8-14  | totient(primes) | −14.7 | 0.0350 | no |
+| p15-22 | primes          | −14.7 | 0.0344 | no |
+| p23-26 | primes          | −14.6 | 0.0343 | no |
+| p27-32 | lucas           | −14.6 | 0.0343 | no |
+| p33-39 | sigma(n)        | −14.6 | 0.0345 | no |
+| p40-53 | tau(n)          | −14.7 | 0.0344 | no |
+| p54-55 | lucas           | −14.6 | 0.0334 | no |
+
+None of the common number-theoretic streams encipher these pages. Whatever key-stream they use
+is either outside this (fairly complete) library, is keyed, or is combined with interrupters or
+transposition that desynchronise it. The scripts (`analysis/triage.py`,
+`analysis/keystream_search.py`) make both results reproducible, and the key-stream search is a
+natural candidate for GPU acceleration if the sequence library is widened.
+
+### 5.3 Ruling out three further cipher classes
+
+Sections 4–5.2 eliminate monoalphabetic ciphers, short-period Vigenère, and the common
+number-theoretic key-streams. Three cipher classes remain worth testing explicitly: a
+**repeating key of any period**, **homophonic substitution**, and **pure transposition**,
+alongside a direct look at the **bigram distribution** and a calibrated **entropy** figure.
+The script `analysis/deep_probes.py` runs all of them, again calibrated against the plaintext
+control (*Loss of Divinity*) and the solved key-stream page (*An End*).
+
+| page | runes | periodic IoC (best d) | isomorph z | χ² vs English (z) | bigram dep. (z) | H₁ | H₂cond |
+|------|------:|----------------------:|-----------:|------------------:|----------------:|-----:|------:|
+| *Loss of Divinity* (plaintext control) | 755 | **0.0667** (d=39) | −1.2 | **1.4** | **18.4** | 4.26 | **3.11** |
+| p56 *An End* (key-stream control) | 85 | 0.0529 (d=20) | −0.0 | 101 | 1.4 | 4.66 | 1.56 |
+| p0-2   | 729  | 0.0374 (d=35) | −3.2 | 799  | 0.3  | 4.84 | 3.93 |
+| p3-7   | 1145 | 0.0375 (d=23) | −3.0 | 1967 | 0.5  | 4.84 | 4.24 |
+| p8-14  | 1729 | 0.0366 (d=24) | −4.8 | 2307 | 0.1  | 4.85 | 4.47 |
+| p15-22 | 1903 | 0.0365 (d=40) | −2.7 | 2617 | 1.7  | 4.85 | 4.48 |
+| p23-26 | 1021 | 0.0360 (d=24) | −2.6 | 968  | −1.5 | 4.84 | 4.24 |
+| p27-32 | 1433 | 0.0364 (d=30) | −3.4 | 1916 | −0.4 | 4.85 | 4.40 |
+| p33-39 | 1680 | 0.0355 (d=32) | −2.8 | 2294 | 1.7  | 4.85 | 4.43 |
+| p40-53 | 3008 | 0.0355 (d=29) | −4.6 | 4686 | 1.9  | 4.85 | 4.62 |
+| p54-55 | 308  | 0.0419 (d=26) | −1.9 | 392  | 1.1  | 4.80 | 3.08 |
+
+**Periodic (Friedman) IoC.** A repeating key of length `d` makes every `d`-th symbol share
+one alphabet, so slicing the text into `d` columns and averaging the per-column IoC peaks
+sharply at the true period (each column becomes monoalphabetic, IoC → English level ≈ 0.06),
+while random text stays at 1/29. Swept over `d` = 1…40, no unsolved page rises meaningfully
+above the floor: the best column-IoC any of them reaches is 0.036–0.042, versus the plaintext
+control's 0.0667. (The highest, p54-55's 0.0419, and the control's peak landing at d=39 rather
+than d=1, are both small-column sampling noise over short texts, not real periods.) There is
+no repeating key of period ≤ 40.
+
+![Friedman periodic-IoC test: a simulated repeating key spikes at its period and harmonics, the plaintext control rides high everywhere, and the unsolved pages stay pinned to the random floor](assets/periodic_ioc.png)
+
+**Isomorph test (homophonic substitution).** A repeated plaintext substring that contains a
+repeated letter leaves a repeated *first-occurrence pattern*, an isomorph such as `ABCCBA`,
+and under a periodic or naively homophonic cipher that pattern can survive into the
+ciphertext. We count non-trivial repeated isomorphs (length 6) and compare to the mean over
+200 random shuffles of the same symbols. No page shows isomorph excess above chance; the
+larger pages fall slightly *below* their own shuffle (−3 to −5 σ), consistent with a stream
+that suppresses short repeats rather than a homophonic cipher that would create them. The
+plaintext control, at 755 runes, is itself too short to register a positive isomorph signal,
+so this probe is read as confirming the *absence* of a strong repeated-sequence signature, not
+as a sensitive English detector.
+
+**Unigram χ² vs English.** Transposition reorders positions but never changes symbol
+identities, so a transposed English page keeps English's rune distribution. Scoring each
+page's unigram distribution against the solved-corpus English-rune profile, the plaintext
+control lands at χ² z = **1.4** (statistically indistinguishable from English, exactly as it
+should) while the unsolved pages score z = 800–4700 (wildly unlike English). Together with
+their flat IoC this rules out pure transposition and plaintext: the symbol *frequencies
+themselves* have been flattened, which only a polyalphabetic / key-stream step does.
+
+**Bigram distribution.** The solved corpus's most common digraphs are the English ones
+(`OU, THE, ER, RE, ST, IS, AN, IN`), and the plaintext control is dominated by `BE, WE, ER, RE,
+THE`. The unsolved pages show no such structure: their top bigrams are low-count and arbitrary
+(p0-2: `ITH, HB, YH, CF`; p40-53's most frequent pair `FA` occurs just 13 times in 3,008
+runes, barely above the ≈ 10 expected by chance). Quantified as a χ² dependence score
+(observed adjacent-pair counts against the independence model `n_a·n_b/N`), the plaintext
+control registers z = **18.4** (strong neighbour coupling) while every unsolved page sits at
+z ≈ 0 (−1.5 to +1.9). Adjacent runes are statistically independent; there is no digraph
+structure to exploit.
+
+**Entropy.** As a single calibrated number: unigram entropy H₁ is 4.84–4.85 bits on every
+unsolved page, essentially the 29-symbol maximum of **4.858**, and the conditional entropy
+H₂ (the surprise in each rune given its predecessor) stays high. The contrast with English is
+clearest at matched length: *Loss of Divinity* (755 runes) has H₂ = **3.11** bits, whereas
+p0-2 (729 runes) has **3.93**, so the plaintext is markedly more predictable. (Conditional-entropy
+estimates are biased downward at small `N`, so they are compared only within similar lengths.)
+The unsolved pages carry close to the maximum possible information per symbol; no redundancy
+remains for an attack to grip.
+
+**Verdict.** Across all three cipher classes the result matches Sections 4–5.2: the plaintext
+control lights up on every probe, and every unsolved page sits at the random / independent
+baseline, with a single striking exception developed in Section 5.4. The remaining cipher
+must flatten the unigram distribution, leave no period ≤ 40, create no homophonic isomorphs,
+and decouple neighbours: a **non-repeating key-stream** (running key, autokey, or a
+longer construction), possibly combined with transposition or interrupters. That is exactly
+the class Section 4 predicted, and exactly the class no public attack has broken.
+
+### 5.4 The one non-flat signal: doublet suppression
+
+Every probe so far returns "random." There is exactly one exception, long noted by the
+CicadaSolvers community and documented on the *Uncovering Cicada* wiki [7], and
+`deep_probes.py` reproduces it precisely: **adjacent identical runes (doublets) are strongly
+suppressed.** Pooled across the nine unsolved page-groups (12,956 runes, with adjacency broken
+between groups), doublets occur **86 times where 446 are expected** by chance, **0.66% against
+3.45%**, a **17σ** deficit:
+
+| | runes | doublets | rate | expected | binomial z |
+|---|------:|---------:|-----:|---------:|-----------:|
+| unsolved corpus (pooled) | 12,956 | 86 | 0.66% | 3.45% (446) | **−17.4** |
+
+The effect holds on every individual page (per-page binomial z from −2.4 to −8.6; none near
+zero), so it is not an artefact of one section. These figures match the community's reported
+values exactly (86 observed, 446 expected), an independent confirmation from a separate
+codebase.
+
+![Doublet rate per page: every unsolved page sits far below the 3.45% chance line, while the plaintext control and the additive An End page do not](assets/doublets.png)
+
+The same signal is visible as a map. The adjacent-pair (bigram) heatmaps below put the plaintext
+control beside the pooled unsolved corpus: English concentrates probability on a handful of
+digraphs (the bright `THE`, `ER`, `E`-row cells), whereas the unsolved corpus is a uniform
+field, with one exception, a **dark diagonal**. The diagonal is exactly the doublet cells
+(first rune = second rune); its darkness against the otherwise flat field is the 0.66% doublet
+suppression rendered visually.
+
+![Bigram heatmaps: the plaintext control lights specific English digraphs; the pooled unsolved corpus is uniform except for a suppressed (dark) diagonal](assets/bigram_heatmap.png)
+
+Two further observations sharpen it. First, the suppression runs *below* the random baseline,
+not merely below English: ordinary English has a doublet rate around 3–4% (LL, SS, EE, OO …),
+and a monoalphabetic substitution would preserve that, so the 0.66% rate excludes simple
+substitution on its own and points to a step that actively forbids equal neighbours. Second,
+the nonzero first-differences are flat: the gap (runeᵢ₊₁ − runeᵢ) mod 29 is uniform over
+1…28 (delta-χ² z ≈ 0 on every unsolved page, versus 13.5 on the plaintext control). In words,
+*each rune is drawn almost uniformly from the 28 values that are not its predecessor.* This is
+also precisely the mechanism behind the negative isomorph scores in Section 5.3: a process that
+avoids length-2 repeats also yields slightly fewer short repeated patterns than a blind shuffle.
+
+What does it buy an attacker? On its own, no decryption: it yields neither plaintext nor key.
+But it is the single genuine structural handle in the corpus, and it constrains the cipher's
+construction: the ciphertext behaves like a sequence in which no symbol may equal the one
+before it. That is the natural output of, for example, a running-key / stream cipher over a
+plaintext that itself rarely doubles, or a construction (route, interrupter, or modular rule)
+engineered to be doublet-free. Any future attack should treat doublet-freeness as a hard
+constraint that the true solution must satisfy, and as the most promising place to
+reverse-engineer the generating rule.
+
+### 5.5 Which cipher family fits the fingerprint?
+
+The nine unsolved page-groups share a single fingerprint across Sections 4–5.4 (IoC ≈ 0.0343,
+doublets ≈ 0.7%, no period, independent neighbours), so they are almost certainly enciphered
+by one scheme. To *identify its family* we encipher known English runes (the pooled solved
+corpus) under each candidate cipher and compare the resulting fingerprint to the observed one
+(`analysis/identify.py`). The family that matches on every axis, including the anomalous
+doublet suppression, is the identification.
+
+| cipher family (applied to English runes) | IoC | doublet % | periodic IoC | bigram dep. z |
+|-------------------------------------------|----:|----------:|-------------:|--------------:|
+| plaintext / monoalphabetic substitution | 0.0614 | 2.62 | 0.0624 | 81.0 |
+| Vigenère (repeating key, period 10) | 0.0374 | 3.39 | **0.0613** | 18.2 |
+| running key (English + English) | 0.0359 | 3.63 | 0.0383 | 0.4 |
+| number stream, φ(prime) (the *An End* cipher) | 0.0345 | 3.12 | 0.0357 | 1.3 |
+| one-time pad (uniform key) | 0.0345 | 3.55 | 0.0354 | −0.1 |
+| **stream + anti-doublet rule** | 0.0345 | **0.00** | 0.0355 | 2.6 |
+| **unsolved pages (observed)** | **0.0343** | **0.71** | **0.0370** | **0.6** |
+
+![Cipher-family fingerprint heatmap: green cells are close to the observed value, red far. Only the anti-doublet stream matches the observed row on all four axes; every other family turns red on at least one, and on the doublet column in particular](assets/fingerprint.png)
+
+Reading the table (and the heatmap above, where red marks a mismatch) top to bottom eliminates
+the families one at a time:
+
+- **Monoalphabetic substitution** leaves every English statistic intact (IoC 0.061, doublets
+  2.6%, strong neighbour coupling z = 81), because relabelling symbols changes none of them.
+  The observed pages show none of this; monoalphabetic ciphers were already excluded in Section
+  4 and are confirmed excluded here.
+- **A repeating-key Vigenère** flattens the overall IoC but betrays itself in the *periodic*
+  IoC (0.061, a sharp column-IoC spike at the key length) and in residual neighbour coupling
+  (z = 18). The observed periodic IoC is flat (0.037), so there is no repeating key, consistent
+  with Section 5.3.
+- **A running key built from a second English text** sits slightly *above* the random floor
+  (IoC 0.0359), because summing two lumpy English distributions is not perfectly flat, and it
+  does not suppress doublets (3.6%). The observed IoC sits right *on* the floor (0.0343), which
+  disfavours an English running key and points to a near-uniform key-stream.
+- **The vanilla additive streams**, the number-theoretic φ(prime) stream that solved *An End*
+  and a uniform one-time pad, match the observed pages on IoC, periodicity, and neighbour
+  independence almost perfectly. They fail on exactly one axis: they leave doublets at the
+  chance rate (3.1–3.6%), whereas the real pages suppress them to 0.7%.
+- **Only an additive stream combined with a rule that forbids equal adjacent symbols**
+  reproduces all four numbers at once, including the doublet suppression.
+
+**Identification.** The unsolved pages are best identified as a **non-repeating additive
+key-stream cipher over the 29 runes**, the same broad family as the solved *An End* page and
+unlike the monoalphabetic / periodic ciphers of the other solved pages, carrying one extra
+deliberate property: **adjacent ciphertext runes are almost never equal.** Every measurement in
+this study is consistent with a keyed or number-theoretic stream whose construction excludes (or
+heavily penalises) equal neighbours; the anti-doublet behaviour is the single feature that
+separates these pages from a textbook stream cipher. The pages are *not* a simple substitution,
+a repeating-key Vigenère, a pure transposition, or an English running key.
+
+Two honest caveats. First, the synthetic anti-doublet model drives doublets to 0.00%, while the
+real pages retain 0.7%; the true suppression is therefore strong but not absolute, suggesting
+the anti-doublet property is a *by-product of the construction* (or a rule acting on the
+plaintext or key) rather than a hard filter on the output. Second, this identifies the cipher
+*family and a structural constraint, not the key or the plaintext*. Fingerprint matching narrows
+the search space and names the mechanism to reverse-engineer; it does not, by itself, read the
+pages.
+
+### 5.6 Underneath the anti-doublet layer
+
+Section 5.5 fit the pages to an additive key-stream *plus* an anti-doublet rule. Two
+follow-up tests (`analysis/antidoublet.py`) sharpen that picture and show why the rule is the
+part that matters.
+
+**The suppression is genuinely non-additive.** An additive stream C = P + K (mod 29) produces
+a doublet exactly when Pᵢ − Pᵢ₋₁ = Kᵢ₋₁ − Kᵢ, which for any ordinary key happens at about the
+chance rate. An additive cipher should therefore leave doublets near 3.45%, and measurement
+confirms it: English plaintext doubles at 2.62%, a simulated totient stream at 3.12%, and,
+decisively, the real solved *An End* page, which *is* an additive totient stream, at
+**2.38%**. None is suppressed. The unsolved pages' 0.66% cannot come from the additive step
+alone; it is a separate, non-additive layer that *An End does not have*. The unsolved cipher is
+thus strictly more than the *An End* construction: it shares the flat key-stream statistics but
+adds a repeat-avoiding mechanism on top. (This refines Section 5.5, where the "additive stream"
+families all reproduced the flat statistics yet none reproduced the doublet suppression.)
+
+**But inverting that layer exposes nothing.** A doublet-free sequence is a first-order chain
+over 29 symbols that never repeats; its natural inversion is the increment, or "de-chaining,"
+stream rᵢ = (Cᵢ − Cᵢ₋₁) mod 29. If the plaintext were a single de-chaining step away, r would
+carry its structure.
+
+| page | doublet % | r: IoC | r: H₁ | r: bigram dep. z |
+|------|----------:|-------:|------:|-----------------:|
+| *Loss of Divinity* (plaintext control) | 2.39 | 0.0392 | 4.73 | **17.9** |
+| p56 *An End* | 2.38 | 0.0304 | 4.69 | −1.1 |
+| p0-2   | 0.55 | 0.0354 | 4.80 | −1.4 |
+| p3-7   | 0.52 | 0.0357 | 4.80 | 2.2 |
+| p8-14  | 0.52 | 0.0355 | 4.82 | 1.6 |
+| p15-22 | 0.53 | 0.0354 | 4.82 | 1.3 |
+| p23-26 | 1.08 | 0.0348 | 4.83 | 0.3 |
+| p27-32 | 0.91 | 0.0354 | 4.82 | −1.8 |
+| p33-39 | 0.71 | 0.0354 | 4.82 | −0.2 |
+| p40-53 | 0.60 | 0.0355 | 4.82 | −1.4 |
+| p54-55 | 0.98 | 0.0373 | 4.73 | −0.5 |
+
+Across every unsolved page the increment stream is flat: IoC ≈ 0.0354 (the random floor),
+entropy H₁ ≈ 4.81 bits against the 4.858 maximum, and bigram-dependence z ≈ 0. The probe is
+calibrated: the plaintext control's increment stream still registers strong coupling (z =
+**17.9**), exactly the signal a near-plaintext page would show, and the unsolved pages show
+none of
+it.
+
+**What this means.** The anti-doublet behaviour is the *outermost visible feature* of the
+cipher, not a thin wrapper over readable text: remove it and the underlying stream is still
+statistically random. The construction simultaneously (i) flattens the single-symbol
+distribution, (ii) decouples neighbours, and (iii) forbids repeats, and peeling off (iii) does
+not expose (i) or (ii) as artefacts of English. The identification is coherent, if
+discouraging: a strong non-repeating key-stream wearing a deliberate no-repeat constraint. The
+practical lead is now precise: the open problem is to find the *generating rule* that makes
+the stream repeat-free, because that rule, not an additive key, is the part of the design that
+leaves a trace.
+
+### 5.7 Consistency with Cicada's documented methods
+
+The statistical identification lines up with what the solved pages, and the community record of
+them, already establish about Cicada's cipher toolkit. Two techniques recur across the
+confirmed solves. The first is a running key-stream built from number theory and reduced mod
+29: *An End* uses a running stream of Euler's totient function (φ) mod 29, the same modulus and
+the same φ/prime motifs that appear elsewhere. The second is the interrupter, a rune that is
+left unencrypted and skipped by the key. On *An End* a single ᚠ (F) rune is passed over and is
+the only symbol not enciphered, and the *Welcome* page pauses its Vigenère key at ᚠ positions
+[8]. An interrupter desynchronises a key-stream from the text, which is precisely the kind of
+mechanism that erases a repeating period and defeats column-based attacks. That is consistent
+with the flat periodic-IoC result in Section 5.3.
+
+We checked whether the ᚠ rune is statistically marked in the unsolved pages, as an interrupter
+might make it. It is not. ᚠ occurs 458 times in the 12,956-rune unsolved corpus, a rate of
+3.54%, essentially its 3.45% chance share, and the per-page rate ranges from 1.95% to 4.66%
+with no consistent excess. So if an interrupter rule is present, it does not announce itself
+through rune frequency, and would have to be inferred from the key geometry rather than the
+counts.
+
+Taken together the picture is coherent. The unsolved pages use the same broad construction
+Cicada demonstrated on the pages it allowed to be solved: a non-repeating key-stream over 29
+runes in the φ/prime idiom, very plausibly combined with an interrupter or skip rule and the
+anti-doublet behaviour documented in Sections 5.4 to 5.6. None of these ingredients is exotic.
+What remains hidden is their specific parameters, namely the exact stream, the key, and the
+placement of any skips. That is the search the statistics cannot shortcut.
+
+### 5.8 The Cicada OS prime list as a key-stream
+
+The gpg-signed Cicada 3301 "OS" ships a small script, `prime_echo`, that prints a specific
+sequence of primes. Parsed, it is the first 464 primes, 2 through 3301, with 3301 itself the
+464th prime and the group's namesake [9]. Because the solved *An End* page keys on a running
+totient-of-primes stream, this exact bounded list is a natural key-stream candidate for the
+unsolved pages, so we tested it directly (`analysis/cicada_primes.py`). Each page was
+deciphered with the list read four ways (raw prime, totient p-1, p+1, prime index), reduced mod
+29, added and subtracted, at small offsets, both linearly and as a repeating cycle of period
+464. Every decrypt was scored by the rune 4-gram model.
+
+The control passes. *An End* is recovered exactly: totient(p-1) subtracted at offset 0, 4-gram
+score -12.1 and IoC 0.0552, reading `AN END, WITHIN THE DEEP WEB, THERE EXISTS A PAGE THAT...`.
+No unsolved page does anything of the kind. The best candidate for every one scores about -14.6,
+the same noise floor seen in Section 5.2, leaves IoC at the random 0.034, and reads as
+gibberish. The period-464 cyclic reading, which this bounded list makes natural, is no better
+than the rest.
+
+So the elegant boundedness of the list, ending precisely on 3301, does not translate into a key
+for these pages. The negative is consistent with the identification in Sections 5.5 and 5.6:
+the unsolved cipher is more than a plain additive prime or totient stream, and the Cicada OS
+primes applied additively are still a plain additive stream. The list is saved as
+`data/cicada_os_primes.txt` for reuse, and this search is a natural extension point once the
+stream is composed with the anti-doublet or interrupter mechanisms rather than applied raw.
+
+### 5.9 Summary of attempted cryptanalyses
+
+Across Sections 4 and 5 the unsolved pages were subjected to a broad battery of attacks
+spanning the classical cipher families and the number-theoretic constructions Cicada is known
+to favour. The table consolidates them. Each search that admits a ground truth was first run
+against a planted-key control, so that a null result reflects the ciphertext and not a faulty
+implementation. On the unsolved pages every attack returned the random baseline (rune 4-gram
+score about -14.6 and Index of Coincidence about 0.034), against a readable-English reference
+of about -12.
+
+| Method | Cipher class addressed | Control | Unsolved pages |
+|--------|------------------------|:------:|----------------|
+| Monoalphabetic hill-climb (`subsolve`) | simple substitution | pass | no decryption |
+| Periodic key search (`vigcrack`) | repeating-key Vigenère | pass | no decryption |
+| Structure probes (`triage.py`) | monographic / digraphic / periodic structure | n/a | flat |
+| Number-theoretic keystream search | additive streams (primes, φ, μ, σ, τ, Fibonacci …) | pass | no decryption |
+| Friedman periodic IoC, period ≤ 40 | repeating key of any period | pass | no period |
+| Isomorph test | homophonic substitution | n/a | no signature |
+| Unigram χ² versus English | pure transposition / plaintext | n/a | excluded |
+| Arithmetic-progression keystream | progressive (Trithemius) key | pass | no decryption |
+| Cicada OS prime list (2–3301) | bounded prime / totient stream | pass | no decryption |
+| Solved vocabulary as Vigenère keys | keyed Vigenère from known words | pass | no decryption |
+| Solved plaintext as running key | running-key cipher | pass | no decryption |
+| Ciphertext autokey | autokey (ciphertext) | pass | no decryption |
+| Plaintext autokey (primer search) | autokey (plaintext) | pass | no decryption |
+| Beaufort over number sequences | Beaufort and variants | n/a | no decryption |
+| Interrupter-aware keystream | keystream with an F-rune interrupter | fail (see note) | inconclusive |
+
+The one attack that could not be validated is the interrupter-aware search. An interrupter
+leaves no trace in the ciphertext statistics (Section 5.7), so it cannot be located by brute
+force and its control does not recover; that family is therefore recorded as inconclusive
+rather than excluded.
+
+The collective result is consistent and, within the reach of these methods, complete. The
+unsolved pages are not a substitution, a transposition, a repeating-key or progressive cipher,
+an autokey, or a Beaufort, and they are not an additive stream over any common integer
+sequence or over Cicada's own published prime list, nor are they keyed by the vocabulary or
+plaintext of the solved pages. What remains compatible with every measurement is the
+construction identified in Sections 5.5 and 5.6: a non-repeating keystream carrying a
+deliberate doublet-avoiding, and plausibly interrupter-bearing, rule whose parameters lie
+outside the tested space. The additional attacks are reproducible through
+`analysis/arith_search.py`, `analysis/solved_vocab_attack.py`, `analysis/more_attacks.py`, and
+`analysis/attack_p40.py`.
+
+---
+
+## 6. Evaluating the "27×27 totient map" solution
+
+A detailed and sincere reconstruction by GitHub user **2retooz270703** [3] proposes that pages
+0–2 (the first 729 runes = 27×27 grid) decrypt via a custom route (mirrored 3-rune nodes,
+Euler-totient transforms, Möbius-function phase selection, coordinate selectors, and a "hidden
+value" rule) to the text *"AS I GO, THE WEATHER TURNS COLD … THE IDEA OF THE END IS DEATH.
+SEE YOU SOON,"* supported by striking numerology. The repository documents the route, the
+per-stage plaintext, and the numerical evidence in full.
+
+We verified the numerical claims independently. **Each holds:**
+
+| claim | verified |
+|-------|:--------:|
+| "AS I GO THE WEATHER TURNS COLD" = 21 runes, index-sum 233 | ✅ |
+| COLD = 51 (0-based indices) | ✅ |
+| 233 is the 51st prime | ✅ |
+| Fibonacci F₇ = 13, F₁₃ = 233 | ✅ |
+| φ(233) = 232 (the next block's sum) | ✅ |
+| 2163 = 3 × 7 × 103 = U · O · Y (prime values) → "YOU" | ✅ |
+
+So the arithmetic is real. **But correct arithmetic is not a verified decryption,** for three
+concrete reasons.
+
+1. **Degrees of freedom.** The method has many tunable choices: route selection through the
+   grid, which 3-rune nodes to use, mirrored vs non-mirrored, phase selection, coordinate
+   selectors, state roles, and a "hidden value" rule. Combined with the Gematria ambiguity
+   (U/V, C/K, S/Z, and digraph-vs-two-letters), a system with this much freedom can be *steered*
+   toward a pre-chosen sentence. The more free parameters a "solution" has, the less any single
+   output means.
+2. **Post-hoc numerology.** The relationships were found *after* fixing the plaintext. Across
+   primes, totients, Fibonacci numbers, indices, and factorizations, the space of "striking"
+   coincidences is enormous, so finding several for a short chosen phrase is expected by chance
+   (apophenia). The author even notes that the Y·O·U product "does not determine letter order."
+3. **It does not match how the genuine pages work.** Every confirmed solve uses *one simple,
+   deterministic* cipher with unambiguous output, reproducible by anyone in a single step, and
+   Cicada built in hard verification (e.g. *An End* literally hashes to a specific value). A
+   real solution of pages 0–2 would be similarly clean and independently checkable.
+
+This assessment concerns the evidentiary standard of the proposal, not the sincerity or care of
+its author. The work is careful, and the structure (e.g. 21 = 3 × 7 = the central rune NG;
+27 = 3³ and 343 = 7³ in the final blocks) is genuinely elegant. The point is that the evidence
+offered is not the *kind* of evidence that settles a cipher.
+
+### 6.1 What would actually verify it
+
+- A **deterministic, parameter-free** procedure mapping the exact 729 ciphertext runes to the
+  plaintext, reproducible by an independent implementation.
+- A **null-hypothesis control**: the same ruleset yields English from the real ciphertext but
+  *not* from shuffled/random runes of identical statistics. A procedure that can produce English
+  from anything proves nothing.
+- An **independently checkable artifact**: a valid hash/onion like the real pages, or correctly
+  solving a *different* unsolved page that then matches a known Cicada value.
+
+Until one of those holds, the proposal is best described as an elegant *hypothesis*, not a solve.
+
+---
+
+## 7. Discussion
+
+- **Measure before you attack.** The IoC indicates in milliseconds whether a page is even within
+  reach of a given method. Most of the unsolved *Liber Primus* is not.
+- **Validate on known answers.** A search tool is trustworthy only if it recovers a plaintext
+  that was deliberately planted. Ours does; many proposed "solvers" are never tested this way.
+- **Numerology is not cryptanalysis.** A rich symbol system will always yield striking
+  coincidences for any short text. Proof comes from *constraint and reproducibility*, not from
+  the number of patterns one can find after the fact.
+- **An honest negative result is a result.** "These pages are statistically flat and resist this
+  entire class of attack" is more useful, and more truthful, than a forced reading.
+
+---
+
+## 8. Reproducibility
+
+```bash
+# from the repository root
+make
+./cicada selftest                               # validates the toolkit
+./cicada decode  data/pages/0_warning.txt atbash
+./cicada decode  data/pages/p56_an_end.txt totient
+./cicada translit data/pages/0_loss_of_divinity.txt
+for p in p0-2 p3-7 p8-14 p15-22 p23-26 p27-32 p33-39 p40-53 p54-55; do
+  ./cicada stats    data/pages/$p.txt
+  ./cicada vigcrack data/pages/$p.txt 15 4 6
+done
+
+# the modern probes (Section 5)
+python3 analysis/triage.py            # structure probes
+python3 analysis/keystream_search.py  # number-theoretic keystream search (+ An End control)
+python3 analysis/deep_probes.py       # periodic IoC, isomorph, transposition, bigram, entropy
+python3 analysis/identify.py          # cipher-family identification by fingerprint matching
+python3 analysis/antidoublet.py       # anti-doublet layer: non-additivity + de-chaining stream
+python3 analysis/cicada_primes.py     # test the Cicada OS prime list (2..3301) as a keystream
+python3 analysis/arith_search.py      # arithmetic-progression keystream search
+python3 analysis/solved_vocab_attack.py  # solved words as Vigenère keys / running key / cribs
+python3 analysis/more_attacks.py      # autokey, Beaufort, interrupter-aware keystream
+python3 analysis/frequency.py         # solved-corpus letter/word frequencies
+python3 analysis/difficulty.py        # difficulty ranking by IoC
+python3 analysis/charts.py            # regenerate the solved-corpus + difficulty figures
+python3 analysis/charts_probes.py     # doublets, bigram heatmap, fingerprint, periodic-IoC figures
+```
+
+---
+
+## Acknowledgements
+
+Rune transcriptions and the rune n-gram corpus are drawn from the community project
+*LiberPrayground* [2]. The Gematria table and cipher mechanics follow community research
+[5, 6]. The audited 27×27 proposal is the work of GitHub user 2retooz270703 [3]; we thank the
+author for the detailed writeup and the interactive route map. This toolkit lives in a fork of
+Jarl Van Eycke's AZdecrypt [4], whose upstream source is kept under `AZdecrypt/`. A
+CUDA/GPU port of the AZdecrypt homophonic solver lives on the `gpu` branch of this repository.
+
+See [`TOOLKIT.md`](TOOLKIT.md) for the `cicada` command-line usage and file formats.
+
+## References
+
+[1] W. F. Friedman, *The Index of Coincidence and Its Applications in Cryptography*, Riverbank
+Publication No. 22, Riverbank Laboratories, 1922.
+
+[2] relikd, *LiberPrayground*, GitHub repository.
+<https://github.com/relikd/LiberPrayground>
+
+[3] 2retooz270703, *Liber-Primus-27x27-Map-3-Rune-Nodes-Totient-Decryption*, GitHub repository.
+<https://github.com/2retooz270703/Liber-Primus-27x27-Map-3-Rune-Nodes-Totient-Decryption>
+
+[4] J. Van Eycke, *AZdecrypt*, homophonic-substitution cipher solver.
+
+[5] *Uncovering Cicada* wiki, Gematria Primus and solved-page documentation.
+
+[6] *Boxentriq*, guide to the Cicada 3301 ciphers and the Gematria Primus.
+
+[7] *Uncovering Cicada* wiki, *Frequency Analysis: Unsolved Pages*.
+<https://uncovering-cicada.fandom.com/wiki/Frequency_Analysis_Unsolved_Pages>
+
+[8] *Uncovering Cicada* wiki, *What Happened: Liber Primus (Post 2014)*.
+<https://uncovering-cicada.fandom.com/wiki/What_Happened_Liber_Primus_(Post_2014)>
+
+[9] Cicada 3301, `prime_echo` script from the signed "OS" distribution: the first 464 primes,
+2 .. 3301. Mirror: <https://pastebin.com/raw/sSJgTKQD>

@@ -1,11 +1,11 @@
-# cicada — Liber Primus / Gematria Primus toolkit
+# cicada: Liber Primus / Gematria Primus toolkit
 
-A module (in this AZdecrypt fork) for working with Cicada 3301's **Liber Primus**: the
+A self-contained toolkit for working with Cicada 3301's **Liber Primus**: the
 29-rune **Gematria Primus** alphabet, the cipher methods used on the *solved* pages, and a
 statistical search harness for testing hypotheses about the *unsolved* ones.
 
-📝 **Writeup:** [RESEARCH.md](RESEARCH.md) — reproducing the solved pages, why the unsolved
-ones resist (an IoC triage), and a skeptic's audit of the "27×27 totient map" solution.
+📝 **Writeup:** [README.md](README.md): reproducing the solved pages, why the unsolved
+ones resist (an IoC triage), and an evidence-based review of the "27×27 totient map" solution.
 
 ## ⚠️ Honest expectations
 
@@ -14,7 +14,7 @@ resisted the entire internet for over a decade. **This tool will not magically c
 What it does:
 
 - **Faithfully reproduce the known solves** (transliteration, Atbash, Vigenère + the F-rune
-  "interrupter" skip, totient/prime streams) — validated against the published plaintext.
+  "interrupter" skip, totient/prime streams), validated against the published plaintext.
 - Provide a fast, scriptable **hypothesis tester** (Vigenère key search, substitution
   hillclimb) scored by a rune language model, so ideas can be checked in seconds.
 
@@ -33,7 +33,7 @@ make test       # runs the self-test
 
 `selftest` reproduces the published reading of page 0 exactly
 (`A WARNNG`, `BELIEUE NOTHNG FROM THIS BOOC`, …). `cracktest` recovers a known plaintext
-encrypted with a hidden 5-rune key — proof the search harness works on a known answer.
+encrypted with a hidden 5-rune key, proof the search harness works on a known answer.
 
 ## Commands
 
@@ -55,12 +55,12 @@ Input files are UTF-8 rune text (runic block glyphs; `•⁘⁚⁖⁜` separator
 has IoC near random (~0.034 over 29 symbols); readable English scores far higher under the
 rune n-gram model.
 
-Build/run from this folder: `make && ./cicada selftest`.
+Build and run from the repository root: `make && ./cicada selftest`.
 
 ### Loading pages in the AZdecrypt GUI
 
 AZdecrypt reads files as single-byte text, so raw UTF-8 runes appear garbled (an encoding
-issue, not a missing font — each 3-byte rune becomes 3 characters). Use `cicada export` to
+issue, not a missing font, since each 3-byte rune becomes 3 characters). Use `cicada export` to
 write the page as space-separated symbol numbers 0-28; ready-made number files are in
 `AZdecrypt/Ciphers/Liber Primus/`.
 

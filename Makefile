@@ -1,4 +1,4 @@
-# Cicada — Liber Primus / Gematria Primus toolkit.
+# Cicada: Liber Primus / Gematria Primus toolkit.
 CXX      ?= g++
 CXXFLAGS ?= -O2 -std=c++17 -Wall -Wextra
 SRC := src/gematria.cpp src/transforms.cpp src/score.cpp src/search.cpp src/cicada_main.cpp
