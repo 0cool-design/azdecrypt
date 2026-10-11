@@ -17,6 +17,11 @@ Reproduce the figures and tables in [`../RESEARCH.md`](../RESEARCH.md).
   does not suppress) and that the increment/de-chaining stream is still flat.
 - `cicada_primes.py` tests the Cicada OS prime list (`../data/cicada_os_primes.txt`, 2..3301)
   as a keystream against the unsolved pages; recovers An End as control, nothing else.
+- `arith_search.py` exhaustive arithmetic-progression (Trithemius) keystream search.
+- `solved_vocab_attack.py` uses the solved-page words as Vigenère keys, the solved plaintext
+  as a running key, and the words as cribs.
+- `more_attacks.py` ciphertext/plaintext autokey, Beaufort, and interrupter-aware keystream.
+- `attack_p40.py` focused Kasiski + crib + running-key attack on the most tractable page.
 
 ```
 python3 frequency.py

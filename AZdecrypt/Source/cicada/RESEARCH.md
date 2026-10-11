@@ -664,6 +664,50 @@ primes applied additively are still a plain additive stream. The list is saved a
 `data/cicada_os_primes.txt` for reuse, and this search is a natural extension point once the
 stream is composed with the anti-doublet or interrupter mechanisms rather than applied raw.
 
+### 5.9 Summary of attempted cryptanalyses
+
+Across Sections 4 and 5 the unsolved pages were subjected to a broad battery of attacks
+spanning the classical cipher families and the number-theoretic constructions Cicada is known
+to favour. The table consolidates them. Each search that admits a ground truth was first run
+against a planted-key control, so that a null result reflects the ciphertext and not a faulty
+implementation. On the unsolved pages every attack returned the random baseline (rune 4-gram
+score about -14.6 and Index of Coincidence about 0.034), against a readable-English reference
+of about -12.
+
+| Method | Cipher class addressed | Control | Unsolved pages |
+|--------|------------------------|:------:|----------------|
+| Monoalphabetic hill-climb (`subsolve`) | simple substitution | pass | no decryption |
+| Periodic key search (`vigcrack`) | repeating-key Vigenère | pass | no decryption |
+| Structure probes (`triage.py`) | monographic / digraphic / periodic structure | n/a | flat |
+| Number-theoretic keystream search | additive streams (primes, φ, μ, σ, τ, Fibonacci …) | pass | no decryption |
+| Friedman periodic IoC, period ≤ 40 | repeating key of any period | pass | no period |
+| Isomorph test | homophonic substitution | n/a | no signature |
+| Unigram χ² versus English | pure transposition / plaintext | n/a | excluded |
+| Arithmetic-progression keystream | progressive (Trithemius) key | pass | no decryption |
+| Cicada OS prime list (2–3301) | bounded prime / totient stream | pass | no decryption |
+| Solved vocabulary as Vigenère keys | keyed Vigenère from known words | pass | no decryption |
+| Solved plaintext as running key | running-key cipher | pass | no decryption |
+| Ciphertext autokey | autokey (ciphertext) | pass | no decryption |
+| Plaintext autokey (primer search) | autokey (plaintext) | pass | no decryption |
+| Beaufort over number sequences | Beaufort and variants | n/a | no decryption |
+| Interrupter-aware keystream | keystream with an F-rune interrupter | fail (see note) | inconclusive |
+
+The one attack that could not be validated is the interrupter-aware search. An interrupter
+leaves no trace in the ciphertext statistics (Section 5.7), so it cannot be located by brute
+force and its control does not recover; that family is therefore recorded as inconclusive
+rather than excluded.
+
+The collective result is consistent and, within the reach of these methods, complete. The
+unsolved pages are not a substitution, a transposition, a repeating-key or progressive cipher,
+an autokey, or a Beaufort, and they are not an additive stream over any common integer
+sequence or over Cicada's own published prime list, nor are they keyed by the vocabulary or
+plaintext of the solved pages. What remains compatible with every measurement is the
+construction identified in Sections 5.5 and 5.6: a non-repeating keystream carrying a
+deliberate doublet-avoiding, and plausibly interrupter-bearing, rule whose parameters lie
+outside the tested space. The additional attacks are reproducible through
+`analysis/arith_search.py`, `analysis/solved_vocab_attack.py`, `analysis/more_attacks.py`, and
+`analysis/attack_p40.py`.
+
 ---
 
 ## 6. Evaluating the "27×27 totient map" solution
@@ -758,6 +802,9 @@ python3 analysis/deep_probes.py       # periodic IoC, isomorph, transposition, b
 python3 analysis/identify.py          # cipher-family identification by fingerprint matching
 python3 analysis/antidoublet.py       # anti-doublet layer: non-additivity + de-chaining stream
 python3 analysis/cicada_primes.py     # test the Cicada OS prime list (2..3301) as a keystream
+python3 analysis/arith_search.py      # arithmetic-progression keystream search
+python3 analysis/solved_vocab_attack.py  # solved words as Vigenère keys / running key / cribs
+python3 analysis/more_attacks.py      # autokey, Beaufort, interrupter-aware keystream
 python3 analysis/frequency.py         # solved-corpus letter/word frequencies
 python3 analysis/difficulty.py        # difficulty ranking by IoC
 python3 analysis/charts.py            # regenerate the solved-corpus + difficulty figures
